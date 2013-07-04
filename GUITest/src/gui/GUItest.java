@@ -24,6 +24,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 
+@SuppressWarnings("serial")
 public class GUItest extends JApplet {
     private JTable table;
 
@@ -86,6 +87,7 @@ public class GUItest extends JApplet {
         JPopupMenu popupMenu = new JPopupMenu();
         addPopup(checkbox_1, popupMenu);
 
+        @SuppressWarnings("rawtypes")
         JComboBox comboBox = new JComboBox();
         popupMenu.add(comboBox);
 
