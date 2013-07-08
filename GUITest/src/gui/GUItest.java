@@ -4,17 +4,23 @@ import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Checkbox;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.Box;
 import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDesktopPane;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JMenuBar;
@@ -23,8 +29,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
-@SuppressWarnings("serial")
 public class GUItest extends JApplet {
     private JTable table;
 
@@ -55,9 +61,21 @@ public class GUItest extends JApplet {
 
         JPanel panel = new JPanel();
         menuBar.add(panel);
+        GridBagLayout gbl_panel = new GridBagLayout();
+        gbl_panel.columnWidths = new int[] { 163, 0, 0, 0, 0 };
+        gbl_panel.rowHeights = new int[] { 30, 0 };
+        gbl_panel.columnWeights =
+                new double[] { 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_panel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+        panel.setLayout(gbl_panel);
 
         JSplitPane splitPane = new JSplitPane();
-        panel.add(splitPane);
+        GridBagConstraints gbc_splitPane = new GridBagConstraints();
+        gbc_splitPane.insets = new Insets(0, 0, 0, 5);
+        gbc_splitPane.anchor = GridBagConstraints.NORTHWEST;
+        gbc_splitPane.gridx = 0;
+        gbc_splitPane.gridy = 0;
+        panel.add(splitPane, gbc_splitPane);
 
         Button button_2 = new Button("Click me");
         button_2.addActionListener(new ActionListener() {
@@ -76,6 +94,7 @@ public class GUItest extends JApplet {
         JDesktopPane desktopPane = new JDesktopPane();
         desktopPane.setBounds(31, 43, 1, -31);
         layeredPane.add(desktopPane);
+
         getContentPane().setLayout(new BorderLayout(0, 0));
 
         JLabel label = new JLabel("");
@@ -87,7 +106,6 @@ public class GUItest extends JApplet {
         JPopupMenu popupMenu = new JPopupMenu();
         addPopup(checkbox_1, popupMenu);
 
-        @SuppressWarnings("rawtypes")
         JComboBox comboBox = new JComboBox();
         popupMenu.add(comboBox);
 
@@ -113,9 +131,27 @@ public class GUItest extends JApplet {
 
         JButton btnNewButton = new JButton("New button");
         verticalBox.add(btnNewButton);
-
     }
 
     private static void addPopup(Component component, final JPopupMenu popup) {
+    }
+
+    public static void main(String[] args) {
+        final JFrame f = new JFrame();
+        JApplet applet = new GUItest();
+
+        applet.init();
+
+        f.setContentPane(applet.getContentPane());
+        f.setBounds(100, 100, 308, 199);
+        f.setTitle("Testing this Application");
+        f.setVisible(true);
+
+        f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        f.addWindowListener(new WindowAdapter() {
+            public void windowClosed(WindowEvent e) {
+                System.exit(0);
+            }
+        });
     }
 }
