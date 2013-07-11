@@ -1,0 +1,80 @@
+
+#
+# Non-rigid registration parameters
+#
+
+Lambda1                           = 0.000001
+Lambda2                           = 0
+Lambda3                           = 0
+Control point spacing in X        = 20
+Control point spacing in Y        = 20
+Control point spacing in Z        = 20
+Subdivision                       = True
+Speedup factor                    = 1
+
+#
+# Registration parameters
+#
+
+No. of resolution levels          = 4
+No. of bins                       = 64
+Padding value                     = 0
+Similarity measure                = NMI
+Interpolation mode                = Linear
+
+
+#
+# Registration parameters for resolution level 1
+#
+
+Resolution level                  = 1
+Target blurring (in mm)           = 0
+Target resolution (in mm)         = 0
+Source blurring (in mm)           = 0
+Source resolution (in mm)         = 0
+No. of iterations                 = 20
+No. of steps                      = 4
+Length of steps                   = 1
+Delta                             = 0
+
+#
+# Registration parameters for resolution level 2
+#
+
+Resolution level                  = 2
+Target blurring (in mm)           = 1
+Target resolution (in mm)         = 1
+Source blurring (in mm)           = 1
+Source resolution (in mm)         = 0
+No. of iterations                 = 20
+No. of steps                      = 4
+Length of steps                   = 2
+Delta                             = 0
+
+#
+# Registration parameters for resolution level 3
+#
+
+Resolution level                  = 3
+Target blurring (in mm)           = 2
+Target resolution (in mm)         = 2
+Source blurring (in mm)           = 2
+Source resolution (in mm)         = 0
+No. of iterations                 = 20
+No. of steps                      = 4
+Length of steps                   = 4
+Delta                             = 0
+
+#
+# Registration parameters for resolution level 4
+#
+
+Resolution level                  = 4
+Target blurring (in mm)           = 2
+Target resolution (in mm)         = 4
+Source blurring (in mm)           = 2
+Source resolution (in mm)         = 0
+No. of iterations                 = 20
+No. of steps                      = 4
+Length of steps                   = 8
+

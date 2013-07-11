@@ -77,6 +77,7 @@ Usage() {
 
 input=`fsl5.0-remove_ext ${1}`
 output=`fsl5.0-remove_ext ${2}`
+
 ref=${3}
 
 if [ `fsl5.0-imtest $input` -eq 0 ];then
@@ -92,8 +93,8 @@ full_list=`fsl5.0-imglob ${output}_tmp????.*`
 if [ -f ${output}.ecclog ]; then rm ${output}.ecclog ; fi
 
 ##run flirt to register first diffusion-weighted image to b0 - using normalised mutual information as a cost function
-echo processing `echo $full_list | awk '{print $2}'` >> tmp
-fsl5.0-flirt -in `echo $full_list | awk '{print $2}'` -ref ${output}_ref -nosearch -o `echo $full_list | awk '{print $2}'` -paddingsize 1 -cost normmi >> tmp
+echo processing `echo $full_list | awk '{print $2}'` >> ${output}_tmp
+fsl5.0-flirt -in `echo $full_list | awk '{print $2}'` -ref ${output}_ref -nosearch -o `echo $full_list | awk '{print $2}'` -paddingsize 1 -cost normmi >> ${output}_tmp
 
 ##for every other image run as normal in eddy_correct
 for i in $full_list ; do
@@ -102,8 +103,8 @@ for i in $full_list ; do
            echo processing $i
            echo processing $i >> ${output}.ecclog
            fsl5.0-flirt -in $i -ref ${output}_ref -nosearch -o $i -paddingsize 1 >> ${output}.ecclog
-	   cat tmp >> ${output}.ecclog
-           rm tmp
+	   cat ${output}_tmp >> ${output}.ecclog
+           rm ${output}_tmp
        else
            echo processing $i
            echo processing $i >> ${output}.ecclog

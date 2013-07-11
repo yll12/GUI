@@ -88,7 +88,8 @@ fsl5.0-fslroi $input ${output}_ref $ref 1
 
 fsl5.0-fslsplit $input ${output}_tmp
 full_list=`fsl5.0-imglob ${output}_tmp????.*`
-rm ${output}.ecclog
+
+if [ -f ${output}.ecclog ]; then rm ${output}.ecclog ; fi
 
 ##run flirt to register first diffusion-weighted image to b0 - using normalised mutual information as a cost function
 echo processing `echo $full_list | awk '{print $2}'` >> tmp

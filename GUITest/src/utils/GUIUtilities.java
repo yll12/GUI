@@ -66,6 +66,7 @@ public class GUIUtilities {
 	 */
 	public static boolean checkInput(final String input,
 			String expectedExtension) {
+		assert input != null & expectedExtension != null;
 		String test = input.trim();
 		return test.substring(test.length() - expectedExtension.length())
 				.equals(expectedExtension);

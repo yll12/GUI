@@ -19,7 +19,6 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
-import net.miginfocom.swing.MigLayout;
 import utils.DoubleOccurrenceException;
 import utils.GUIUtilities;
 import utils.NoSuchFileException;
@@ -45,38 +44,38 @@ public class DiffusionPreprocessing extends JApplet {
 				}
 			}
 		}
-
-		getContentPane().setLayout(
-				new MigLayout("", "[72px][5px][18px][210px][45px][65px]",
-						"[20px][23px][23px]"));
+		getContentPane().setLayout(null);
 
 		JLabel lblNewLabel = new JLabel("Input directory");
-		getContentPane().add(lblNewLabel, "cell 0 0,alignx left,aligny center");
+		lblNewLabel.setBounds(6, 12, 91, 15);
+		getContentPane().add(lblNewLabel);
 
 		textField = new JTextField();
-		getContentPane().add(textField, "cell 1 0 3 1,growx");
+		textField.setBounds(103, 6, 307, 27);
+		getContentPane().add(textField);
 		textField.setColumns(10);
 		JButton btnOpen = new JButton("Open");
+		btnOpen.setBounds(430, 6, 61, 27);
 		btnOpen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				buildLoadDiag();
 			}
 		});
-		getContentPane().add(btnOpen, "cell 4 0,alignx left,aligny top");
+		getContentPane().add(btnOpen);
 
 		chckbxBedpostx = new JCheckBox("Bedpostx");
-		getContentPane().add(chckbxBedpostx,
-				"cell 0 1,alignx left,aligny center");
+		chckbxBedpostx.setBounds(6, 44, 80, 18);
+		getContentPane().add(chckbxBedpostx);
 
 		final JFrame errors = new JFrame();
 		JButton btnNewButton = new JButton("Go");
-		errors.add(btnNewButton);
+		btnNewButton.setBounds(365, 72, 45, 27);
 		errors.pack();
 		errors.setVisible(false);
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String inputData = textField.getText();
-				
+
 				if (inputData.trim().isEmpty()) {
 
 					JOptionPane.showMessageDialog(errors, "No input specified");
@@ -101,7 +100,8 @@ public class DiffusionPreprocessing extends JApplet {
 							String.valueOf(chckbxBedpostx.isSelected()),
 							workingdir, bvecs, bval };
 
-					String script = "'cd ../; ./Script ";
+					String script = "'cd ../ScriptsRunByGUI; "
+							+ "./DiffusionPreprocessingScripts.sh ";
 					for (int i = 0; i < args.length; i++) {
 						script += args[i];
 						if (i < args.length - 1) {
@@ -146,19 +146,20 @@ public class DiffusionPreprocessing extends JApplet {
 			}
 
 		});
-		getContentPane().add(btnNewButton, "cell 3 1,alignx right,aligny top");
+		getContentPane().add(btnNewButton);
 
 		JButton btnCancel = new JButton("Cancel");
+		btnCancel.setBounds(421, 72, 70, 27);
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				System.exit(0);
 			}
 		});
-		getContentPane().add(btnCancel, "cell 4 1,alignx left,aligny top");
+		getContentPane().add(btnCancel);
 
 	}
 
-	public void buildLoadDiag() {
+	private void buildLoadDiag() {
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		fileChooser.setFileSelectionMode(JFileChooser.OPEN_DIALOG);
@@ -184,7 +185,7 @@ public class DiffusionPreprocessing extends JApplet {
 		applet.init();
 
 		f.setContentPane(applet.getContentPane());
-		f.setBounds(100, 100, 308, 199);
+		f.setBounds(400, 100, 500, 136);
 		f.setTitle("Diffusion Pre-processing");
 		f.setVisible(true);
 

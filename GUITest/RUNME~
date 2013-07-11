@@ -1,8 +1,15 @@
 #!/bin/sh
 
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+cd $DIR
+
 path=$PWD 
 export PATH=$PATH:$path/jre1.7.0_25/bin
 
-cd `dirname $0`
-java -jar ./test.jar $*
+cd jar
+java -jar ./Diffusion.jar $*
 cd $OLDPWD
+
+
+cd $DIR
