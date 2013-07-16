@@ -6,9 +6,11 @@
 ## $4 :: bvecs
 ## $5 :: bvals
 
-PreprocessingScripts/eddy_correct_neonate2 $1 $3/data.nii.gz 0 
+cd ../PreprocessingScripts
 
-PreprocessingScripts/fdt_rotate_bvecs $3/$4 $3/rotated_bvecs $3/data.ecclog
+./eddy_correct_neonate2 $1 $3/data.nii.gz 0 
+
+./fdt_rotate_bvecs $3/$4 $3/rotated_bvecs $3/data.ecclog
 
 fsl5.0-fslroi $3/data.nii.gz $3/nodif 0 1 
 fsl5.0-bet $3/nodif.nii.gz $3/nodif_brain -f 0.3 -m 
@@ -19,4 +21,24 @@ if $2; then
 	fsl5.0-bedpostx $3
 
 fi
+
+RETVAL=$?
+
+if [ $RETVAL -eq 0 ]
+then
+	echo "Process Successful"
+	echo "Exit terminal in . . ."
+	x=10
+	while [ $x -ge 0 ]
+		do 
+			sleep 1
+			echo $x
+			x=$((x - 1))
+		done 
+	killall terminal
+else
+	echo "Process Unsuccessful(error occurred)"	
+fi
+
+cd $OLDPWD
 

@@ -37,7 +37,8 @@ PreprocessingScripts/rescale ${subj}_brain.nii.gz ${subj}_brain.nii.gz 0 1000
 ##Registration
 
 #PreprocessingScripts/cog - need from Antonios
-PreprocessingScripts/rreg  ${subj}_brain.nii.gz PreprocessingScripts/templates/template-(age).nii.gz -dofout ${subj}_template_to_T2.dof
+PreprocessingScripts/cog  ${subj}_brain.nii.gz PreprocessingScripts/templates/template-(age).nii.gz ${subj}_template_to_T2.dof
+PreprocessingScripts/rreg  ${subj}_brain.nii.gz PreprocessingScripts/templates/template-(age).nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
 PreprocessingScripts/areg  ${subj}_brain.nii.gz PreprocessingScripts/templates/template-(age).nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
 PreprocessingScripts/nreg ${subj}_brain.nii.gz PreprocessingScripts/templates/template-(age).nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof -parin PreprocessingScripts/nreg_neonate.cnf
 

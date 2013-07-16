@@ -22,5 +22,23 @@ if $2; then
 
 fi
 
+RETVAL=$?
+
+if [ $RETVAL -eq 0 ]
+then
+	echo "Process Successful"
+	echo "Exit terminal in . . ."
+	x=10
+	while [ $x -ge 0 ]
+		do 
+			sleep 1
+			echo $x
+			x=$((x - 1))
+		done 
+	kill $PPID
+else
+	echo "Process Unsuccessful(error occurred)"	
+fi
+
 cd $OLDPWD
 

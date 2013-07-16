@@ -9,18 +9,21 @@ import java.nio.file.PathMatcher;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.UIManager;
+
 public class GUIUtilities {
 
 	public static DirectoryStream<?> newDirectoryStream(Path dir, String glob)
 			throws IOException {
 		FileSystem fs = dir.getFileSystem();
 		final PathMatcher matcher = fs.getPathMatcher("glob:" + glob);
-		DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
-			@Override
-			public boolean accept(Path entry) throws IOException {
-				return matcher.matches(entry.getFileName());
-			}
-		};
+		DirectoryStream.Filter<Path> filter =
+				new DirectoryStream.Filter<Path>() {
+					@Override
+					public boolean accept(Path entry) throws IOException {
+						return matcher.matches(entry.getFileName());
+					}
+				};
 		return fs.provider().newDirectoryStream(dir, filter);
 	}
 
@@ -36,8 +39,9 @@ public class GUIUtilities {
 		List<String> result = new LinkedList<String>();
 		Path folderToIterate = FileSystems.getDefault().getPath(workdir);
 		try {
-			DirectoryStream<Path> ds = (DirectoryStream<Path>) newDirectoryStream(
-					folderToIterate, pattern);
+			DirectoryStream<Path> ds =
+					(DirectoryStream<Path>) newDirectoryStream(folderToIterate,
+							pattern);
 			for (Path p : ds) {
 				result.add(p.getFileName().toString());
 			}
@@ -79,5 +83,19 @@ public class GUIUtilities {
 		System.out.println("Work directory is: " + getWorkingDirectory(x));
 		System.out.println(checkInput(x, ".zip") ? "Contains the extension"
 				: "Does not contains the extension");
+	}
+
+	public static void initLookAndFeel(String look) {
+		for (UIManager.LookAndFeelInfo info : UIManager
+				.getInstalledLookAndFeels()) {
+			if (look.equals(info.getName())) {
+				try {
+					UIManager.setLookAndFeel(info.getClassName());
+					break;
+				} catch (Exception x) {
+					x.printStackTrace();
+				}
+			}
+		}
 	}
 }

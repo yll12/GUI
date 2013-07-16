@@ -43,7 +43,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 	private JCheckBox chckbxBedpostx;
 	private JTextField textField_1;
 	private final String dummyToolTip = "Hi There";
-	private int numberOfDataSet;
+	private int dataIndex;
 	private final int heightDifference = 30;
 	private static JFrame f;
 	private final List<Triple<JLabel, JTextField, JButton>> inputs =
@@ -54,48 +54,54 @@ public class DiffusionPreprocessingExtension extends JApplet {
 	 * Create the applet.
 	 */
 	public DiffusionPreprocessingExtension() {
-		this.numberOfDataSet = 0;
+		this.dataIndex = 0;
 	}
 
 	public DiffusionPreprocessingExtension(Integer num) {
-		this.numberOfDataSet = num;
+		this.dataIndex = num;
 	}
 
 	@Override
 	public void init() {
-		initLookAndFeel("Nimbus");
+		GUIUtilities.initLookAndFeel("Nimbus");
 		getContentPane().setPreferredSize(
 				new Dimension((int) (Math.random() * 2), 2));
 		getContentPane().setLayout(null);
 
-		initInputDirectory(numberOfDataSet);
+		initInputDirectory(dataIndex);
 
 		chckbxBedpostx = new JCheckBox("Bedpostx");
-		chckbxBedpostx.setBounds(6, 76 + numberOfDataSet * heightDifference,
-				80, 18);
+		chckbxBedpostx.setBounds(6, 76 + dataIndex * heightDifference, 80, 18);
 		getContentPane().add(chckbxBedpostx);
 
 		final JFrame errors = new JFrame();
 		errors.pack();
 		errors.setVisible(false);
 		JButton btnNewButton = new JButton("Go");
-		btnNewButton.setBounds(364, 103 + numberOfDataSet * heightDifference,
-				45, 27);
+		btnNewButton.setBounds(364, 103 + dataIndex * heightDifference, 45, 27);
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				String inputData = inputs.get(0).getB().getText();
+				for (int i = 0; i <= dataIndex; i++) {
+					String inputData = inputs.get(i).getB().getText();
+					executePreprocessing(errors, inputData, i);
+				}
+			}
 
+			private void executePreprocessing(final JFrame errors,
+					String inputData, int index) {
 				if (inputData.trim().isEmpty()) {
 
-					JOptionPane.showMessageDialog(errors, "No input specified");
+					JOptionPane.showMessageDialog(errors, "Input "
+							+ (index + 1) + ": " + "No input specified");
 
 					return;
 				}
 
 				if (!GUIUtilities.checkInput(inputData, ".nii.gz")) {
 
-					JOptionPane.showMessageDialog(errors,
-							"This is not an image file!");
+					JOptionPane
+							.showMessageDialog(errors, "Input " + (index + 1)
+									+ ": " + "this is not an image file!");
 					return;
 				}
 
@@ -129,14 +135,16 @@ public class DiffusionPreprocessingExtension extends JApplet {
 				} catch (NoSuchFileException e) {
 
 					// Create an error pop up
-					JOptionPane.showMessageDialog(errors, e.getMessage()
+					JOptionPane.showMessageDialog(errors, "Input "
+							+ (index + 1) + ": " + e.getMessage()
 							+ " not found!");
 
 				} catch (DoubleOccurrenceException e) {
 
 					// Create an error pop up
-					JOptionPane.showMessageDialog(errors,
-							"Multiple occurrence of " + e.getMessage());
+					JOptionPane.showMessageDialog(errors, "Input "
+							+ (index + 1) + ": " + "Multiple occurrence of "
+							+ e.getMessage());
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -162,8 +170,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		getContentPane().add(btnNewButton);
 
 		JButton btnCancel = new JButton("Cancel");
-		btnCancel.setBounds(420, 103 + numberOfDataSet * heightDifference, 70,
-				27);
+		btnCancel.setBounds(420, 103 + dataIndex * heightDifference, 70, 27);
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				System.exit(0);
@@ -172,8 +179,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		getContentPane().add(btnCancel);
 
 		JButton btnHelp = new JButton("Help");
-		btnHelp.setBounds(237, 104 + numberOfDataSet * heightDifference, 117,
-				25);
+		btnHelp.setBounds(266, 104 + dataIndex * heightDifference, 88, 25);
 		getContentPane().add(btnHelp);
 
 		JLabel lblNumberOfDatasets = new JLabel("Number of datasets");
@@ -184,7 +190,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		slider.setMinimum(1);
 		slider.setMaximum(10);
 		slider.setBounds(154, 12, 200, 16);
-		slider.setValue(numberOfDataSet + 1);
+		slider.setValue(dataIndex + 1);
 		getContentPane().add(slider);
 		slider.addChangeListener(new ChangeListener() {
 
@@ -205,6 +211,10 @@ public class DiffusionPreprocessingExtension extends JApplet {
 			@Override
 			public boolean verify(JComponent input) {
 				JTextField tf = (JTextField) input;
+				if (tf.getText().isEmpty()) {
+					tf.setText(String.valueOf(slider.getValue()));
+					return true;
+				}
 				try {
 					int x = Integer.parseInt(tf.getText());
 					if (x <= 10 && x >= 1) {
@@ -227,7 +237,6 @@ public class DiffusionPreprocessingExtension extends JApplet {
 			@Override
 			public void keyReleased(KeyEvent ke) {
 				String typed = textField_1.getText();
-				slider.setValue(1);
 				if (!typed.matches("\\d+") || typed.length() > 3) {
 					return;
 				}
@@ -258,12 +267,11 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		JButton btnGo = new JButton("Go");
 		btnGo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				numberOfDataSet = Integer.parseInt(textField_1.getText()) - 1;
+				dataIndex = Integer.parseInt(textField_1.getText()) - 1;
 
-				f.setBounds(400, 100, 510, 136 + numberOfDataSet
-						* heightDifference);
+				f.setBounds(400, 100, 510, 136 + dataIndex * heightDifference);
 
-				applet = new DiffusionPreprocessingExtension(numberOfDataSet);
+				applet = new DiffusionPreprocessingExtension(dataIndex);
 
 				applet.init();
 				f.setContentPane(applet.getContentPane());
@@ -276,16 +284,16 @@ public class DiffusionPreprocessingExtension extends JApplet {
 	}
 
 	private void initInputDirectory(final int index) {
-		for (int i = 0; i <= index; i++) {
+		for (int i = 0; i <=  index; i++) {
 			final int x = i;
 			inputs.add(new Triple<JLabel, JTextField, JButton>(new JLabel(
-					"Input directory " + (i + 1)), new JTextField(),
-					new JButton("Open")));
+					"Input data " + (i + 1)), new JTextField(), new JButton(
+					"Open")));
 			inputs.get(i).getA()
 					.setBounds(6, 43 + i * heightDifference, 111, 15);
 			getContentPane().add(inputs.get(i).getA());
 			inputs.get(i).getB()
-					.setBounds(115, 37 + i * heightDifference, 294, 27);
+					.setBounds(90, 37 + i * heightDifference, 318, 27);
 			getContentPane().add(inputs.get(i).getB());
 			inputs.get(i).getB().setColumns(10);
 			inputs.get(i).getC()
@@ -296,20 +304,6 @@ public class DiffusionPreprocessingExtension extends JApplet {
 				}
 			});
 			getContentPane().add(inputs.get(i).getC());
-		}
-	}
-
-	private void initLookAndFeel(String look) {
-		for (UIManager.LookAndFeelInfo info : UIManager
-				.getInstalledLookAndFeels()) {
-			if (look.equals(info.getName())) {
-				try {
-					UIManager.setLookAndFeel(info.getClassName());
-					break;
-				} catch (Exception x) {
-					x.printStackTrace();
-				}
-			}
 		}
 	}
 
