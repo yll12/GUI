@@ -98,4 +98,12 @@ public class GUIUtilities {
 			}
 		}
 	}
+
+	public static int increaseByHeight(int index, int heightDifference) {
+		return heightDifference * (index <= 9 ? index : 9);
+	}
+
+	public static int getNumberOfConcurrentProcess(int maximum, int preferred) {
+		return preferred < maximum ? preferred : maximum;
+	}
 }

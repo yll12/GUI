@@ -49,7 +49,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 		getContentPane().add(lblInputDirectory);
 
 		textField = new JTextField();
-		textField.setBounds(123, 8, 293, 27);
+		textField.setBounds(108, 8, 313, 27);
 		getContentPane().add(textField);
 		textField.setColumns(10);
 
@@ -82,7 +82,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 		errors.pack();
 
 		textField_1 = new JTextField();
-		textField_1.setBounds(376, 41, 40, 27);
+		textField_1.setBounds(381, 41, 40, 27);
 		getContentPane().add(textField_1);
 		textField_1.setColumns(10);
 		textField_1.setText(String.valueOf(slider.getValue()));
@@ -158,11 +158,11 @@ public class T2PreprocessingManualChooser extends JApplet {
 		icn.paintIcon(null, image.getGraphics(), 0, 0);
 
 		ImageIcon icon =
-				new ImageIcon(image.getScaledInstance(20, 20,
-						Image.SCALE_AREA_AVERAGING));
+				new ImageIcon(image.getScaledInstance(23, 23,
+						Image.SCALE_SMOOTH));
 
-		JLabel lblquestion = new JLabel(icon);
-		lblquestion.setBounds(427, 41, 32, 27);
+		JButton lblquestion = new JButton(icon);
+		lblquestion.setBounds(427, 43, 22, 22);
 		lblquestion.setHorizontalAlignment(SwingConstants.CENTER);
 		lblquestion.setToolTipText(dummyToolTip);
 		getContentPane().add(lblquestion);

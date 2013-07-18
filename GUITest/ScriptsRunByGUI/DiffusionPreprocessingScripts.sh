@@ -6,25 +6,35 @@
 ## $4 :: bvecs
 ## $5 :: bvals
 
+error ()
+{
+if [ $? != 0 ] || [ $NoError == "false" ]
+then
+	echo "Process Unsuccessful(error occurred)"
+	NoError=false
+fi
+}
+
+NoError=true
 cd ../PreprocessingScripts
-
 ./eddy_correct_neonate2 $1 $3/data.nii.gz 0 
-
+error
 ./fdt_rotate_bvecs $3/$4 $3/rotated_bvecs $3/data.ecclog
-
+error
 fsl5.0-fslroi $3/data.nii.gz $3/nodif 0 1 
+error
 fsl5.0-bet $3/nodif.nii.gz $3/nodif_brain -f 0.3 -m 
+error
 fsl5.0-dtifit -k $3/data.nii.gz -o $3/dti -r $3/rotated_bvecs -b $3/$5 -m $3/nodif_brain_mask
-
+error
 if $2; then
 
 	fsl5.0-bedpostx $3
 
 fi
+error
 
-RETVAL=$?
-
-if [ $RETVAL -eq 0 ]
+if $NoError
 then
 	echo "Process Successful"
 	echo "Exit terminal in . . ."
@@ -37,7 +47,11 @@ then
 		done 
 	kill $PPID
 else
-	echo "Process Unsuccessful(error occurred)"	
+	f1=$1
+	filename=${f1##*/}
+	echo "Error Log" > $3/$filename"_error"
+	sleep 100
+	rm $3/$filename"_error"
 fi
 
 cd $OLDPWD
