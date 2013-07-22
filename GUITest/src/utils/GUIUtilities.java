@@ -1,6 +1,8 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -13,17 +15,15 @@ import javax.swing.UIManager;
 
 public class GUIUtilities {
 
-	public static DirectoryStream<?> newDirectoryStream(Path dir, String glob)
-			throws IOException {
+	public static DirectoryStream<?> newDirectoryStream(Path dir, String glob) throws IOException {
 		FileSystem fs = dir.getFileSystem();
 		final PathMatcher matcher = fs.getPathMatcher("glob:" + glob);
-		DirectoryStream.Filter<Path> filter =
-				new DirectoryStream.Filter<Path>() {
-					@Override
-					public boolean accept(Path entry) throws IOException {
-						return matcher.matches(entry.getFileName());
-					}
-				};
+		DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
+			@Override
+			public boolean accept(Path entry) throws IOException {
+				return matcher.matches(entry.getFileName());
+			}
+		};
 		return fs.provider().newDirectoryStream(dir, filter);
 	}
 
@@ -39,9 +39,7 @@ public class GUIUtilities {
 		List<String> result = new LinkedList<String>();
 		Path folderToIterate = FileSystems.getDefault().getPath(workdir);
 		try {
-			DirectoryStream<Path> ds =
-					(DirectoryStream<Path>) newDirectoryStream(folderToIterate,
-							pattern);
+			DirectoryStream<Path> ds = (DirectoryStream<Path>) newDirectoryStream(folderToIterate, pattern);
 			for (Path p : ds) {
 				result.add(p.getFileName().toString());
 			}
@@ -49,6 +47,26 @@ public class GUIUtilities {
 			e.printStackTrace();
 		}
 		return result;
+	}
+
+	/**
+	 * @param workdir
+	 *            working directory to iterate through
+	 * @param pattern
+	 *            pattern to look for
+	 * @return a list of files that matches the pattern in the working directory
+	 */
+	@SuppressWarnings("unchecked")
+	public static void deleteFile(String workdir, String pattern) {
+		Path folderToIterate = FileSystems.getDefault().getPath(workdir);
+		try {
+			DirectoryStream<Path> ds = (DirectoryStream<Path>) newDirectoryStream(folderToIterate, pattern);
+			for (Path p : ds) {
+				p.toFile().delete();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -62,32 +80,30 @@ public class GUIUtilities {
 	}
 
 	/**
+	 * @param given
+	 *            Example : /staff/yl13/Data.nii.gz
+	 * @return Data.nii.gz
+	 */
+	public static String getFileName(String inputData) {
+		assert inputData != null;
+		return inputData.substring(inputData.lastIndexOf("/") + 1);
+	}
+
+	/**
 	 * @param input
 	 *            input to check (Example: data.nii.gz)
 	 * @param expectedExtension
 	 *            (Example: .nii.gz)
 	 * @return true if and only if expectedExtension occurs at the end of input
 	 */
-	public static boolean checkInput(final String input,
-			String expectedExtension) {
+	public static boolean checkInput(final String input, String expectedExtension) {
 		assert input != null & expectedExtension != null;
 		String test = input.trim();
-		return test.substring(test.length() - expectedExtension.length())
-				.equals(expectedExtension);
-	}
-
-	public static void main(String[] args) {
-		System.out.println("Testing utilities..");
-		String x = "/staff/yl13/Testing.zip";
-		System.out.println("Input is: " + x);
-		System.out.println("Work directory is: " + getWorkingDirectory(x));
-		System.out.println(checkInput(x, ".zip") ? "Contains the extension"
-				: "Does not contains the extension");
+		return test.substring(test.length() - expectedExtension.length()).equals(expectedExtension);
 	}
 
 	public static void initLookAndFeel(String look) {
-		for (UIManager.LookAndFeelInfo info : UIManager
-				.getInstalledLookAndFeels()) {
+		for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 			if (look.equals(info.getName())) {
 				try {
 					UIManager.setLookAndFeel(info.getClassName());
@@ -105,5 +121,88 @@ public class GUIUtilities {
 
 	public static int getNumberOfConcurrentProcess(int maximum, int preferred) {
 		return preferred < maximum ? preferred : maximum;
+	}
+
+	public static Thread createObserverThread(final Thread t, final String inputData) {
+		return new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				String workdir = getWorkingDirectory(inputData);
+				while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
+					if (hasFinished(inputData, workdir, "_error") || hasFinished(inputData, workdir, "_success")) {
+						break;
+					}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		});
+
+	}
+
+	private static boolean hasFinished(final String inputData, String workdir, String pattern) {
+		List<String> list = GUIUtilities.searchFile(workdir, getFileName(inputData) + pattern);
+		if (!list.isEmpty()) {
+			deleteFile(workdir, list.get(0));
+			return true;
+		}
+		return false;
+	}
+
+	public static Thread createExecutingThread(final String[] cmdArray) {
+		return new Thread(new Runnable() {
+			@Override
+			public void run() {
+				ProcessBuilder pb = new ProcessBuilder(cmdArray);
+
+				pb.redirectErrorStream(true);
+				Process p = null;
+				try {
+					p = pb.start();
+					p.waitFor();
+					InputStreamReader isr = new InputStreamReader(p.getInputStream());
+					BufferedReader br = new BufferedReader(isr);
+
+					while (br.readLine() != null) {
+					}
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} finally {
+					if (p != null) {
+						try {
+							p.getOutputStream().close();
+							p.getInputStream().close();
+							p.getErrorStream().close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+			}
+		});
+	}
+
+	public static void main(String[] args) {
+		System.out.println("Testing utilities..");
+		String x = "/staff/yl13/Testing.zip";
+		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
+		testMethod(x);
+		testMethod(y);
+	}
+
+	private static void testMethod(String x) {
+		System.out.println("Input is: " + x);
+		System.out.println("Work directory is: " + getWorkingDirectory(x));
+		System.out.println("File name is: " + getFileName(x));
+		System.out.println("Error file name is: " + getFileName(x) + "_error");
+		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
 	}
 }

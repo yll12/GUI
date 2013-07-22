@@ -14,7 +14,6 @@ then
 	NoError=false
 fi
 }
-
 NoError=true
 cd ../PreprocessingScripts
 ./eddy_correct_neonate2 $1 $3/data.nii.gz 0 
@@ -34,9 +33,13 @@ if $2; then
 fi
 error
 
+f1=$1
+filename=${f1##*/}
+
 if $NoError
 then
 	echo "Process Successful"
+	echo "Success" > $3/$filename"_success"
 	echo "Exit terminal in . . ."
 	x=10
 	while [ $x -ge 0 ]
@@ -45,13 +48,10 @@ then
 			echo $x
 			x=$((x - 1))
 		done 
-	kill $PPID
+	exit 0
 else
-	f1=$1
-	filename=${f1##*/}
-	echo "Error Log" > $3/$filename"_error"
-	sleep 100
-	rm $3/$filename"_error"
+	echo "Error" > $3/$filename"_error"
+	read
 fi
 
 cd $OLDPWD
