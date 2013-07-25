@@ -57,7 +57,8 @@ public class GUIUtilities {
 			if (subFolder.isDirectory()) {
 				result.addAll(searchAllFile(subFolder.getAbsolutePath(), pattern));
 			} else {
-				if (subFolder.getName().equals(pattern)) {
+				PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+				if (matcher.matches(subFolder.toPath().getFileName())) {
 					result.add(subFolder.getAbsolutePath());
 				}
 			}

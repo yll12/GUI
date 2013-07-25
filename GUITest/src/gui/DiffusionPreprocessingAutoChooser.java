@@ -1,14 +1,12 @@
 package gui;
 
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JApplet;
@@ -19,7 +17,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.WindowConstants;
 
 import utils.GUIUtilities;
@@ -33,15 +30,18 @@ public class DiffusionPreprocessingAutoChooser extends JApplet {
 	private JTextField textField_2;
 	private int numOfFiles = 0;
 	private final int heightDifference = 30;
+	private List<String> texts = new LinkedList<String>();
+	private List<JTextField> textfields = new LinkedList<JTextField>();
 
 	/**
 	 * Create the applet.
 	 */
 	public DiffusionPreprocessingAutoChooser() {
 	}
-	
-	public DiffusionPreprocessingAutoChooser(int numOfFiles) {
+
+	public DiffusionPreprocessingAutoChooser(int numOfFiles, List<String> texts) {
 		this.numOfFiles = numOfFiles;
+		this.texts = texts;
 	}
 
 	@Override
@@ -97,27 +97,40 @@ public class DiffusionPreprocessingAutoChooser extends JApplet {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					String inputDir = textField_1.getText();
-					String pattern = "unreg-data.nii.gz";
-					List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
-					String arguments = "";
-					for (int i = 0; i < inputs.size(); i++) {
-						arguments += inputs.get(i);
-						if (i < inputs.size() - 1) {
-							arguments += " ";
-						}
+					List<String> fileNameToLook = new LinkedList<String>();
+					for (int i = 0; i < textfields.size(); i++) {
+						fileNameToLook.add(textfields.get(i).getText());
 					}
-					Runtime.getRuntime().exec("java -jar DiffusionManual.jar " + arguments);
+					String arguments = "";
+					for (int i = 0; i < fileNameToLook.size(); i++) {
+						String pattern = fileNameToLook.get(i);
+						if (pattern.trim().isEmpty()) {
+							continue;
+						}
+						List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
+						if (!inputs.isEmpty()) {
+							arguments += " ";
+							for (int j = 0; j < inputs.size(); j++) {
+								arguments += inputs.get(j);
+								if (j < inputs.size() - 1) {
+									arguments += " ";
+								}
+							}
+						}
+
+					}
+					Runtime.getRuntime().exec("java -jar DiffusionManual.jar" + arguments);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
 				System.exit(0);
 			}
 		});
-		btnNewButton_2.setBounds(328, 146, 76, 25);
+		btnNewButton_2.setBounds(328, 146 + numOfFiles * heightDifference, 76, 25);
 		getContentPane().add(btnNewButton_2);
 
 		JButton btnNewButton_3 = new JButton("Switch View to Manual");
-		btnNewButton_3.setBounds(8, 146, 194, 25);
+		btnNewButton_3.setBounds(8, 146 + numOfFiles * heightDifference, 194, 25);
 		getContentPane().add(btnNewButton_3);
 		btnNewButton_3.addActionListener(new ActionListener() {
 
@@ -136,16 +149,37 @@ public class DiffusionPreprocessingAutoChooser extends JApplet {
 
 		});
 
-		createFile(1, "unreg-data.nii.gz");
-		createFile(2, "unreg-data.nii");
-		
-		JButton btnAddMoreFiles = new JButton("Add more files");
+		if (texts.isEmpty()) {
+			createFile(0, "unreg-data.nii.gz");
+			createFile(1, "unreg-data.nii");
+		} else {
+			int size = texts.size();
+			for (int i = 0; i < numOfFiles + 2; i++) {
+				if (i < size) {
+					createFile(i, texts.get(0));
+					texts.remove(0);
+				} else {
+					createFile(i, "");
+				}
+			}
+		}
+
+		final JButton btnAddMoreFiles = new JButton("Add more files");
+		if (numOfFiles == 3) {
+			btnAddMoreFiles.setEnabled(false);
+		}
 		btnAddMoreFiles.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				numOfFiles++;
-				f.setSize(510, 185 + (numOfFiles * 30));
-				createFile(numOfFiles + 2, "");
-				applet.init();
+				if (numOfFiles < 3) {
+					numOfFiles++;
+					f.setSize(510, 205 + numOfFiles * heightDifference);
+					for (int i = 0; i < textfields.size(); i++) {
+						texts.add(textfields.get(i).getText());
+					}
+					applet = new DiffusionPreprocessingAutoChooser(numOfFiles, texts);
+					applet.init();
+					f.setContentPane(applet.getContentPane());
+				}
 			}
 		});
 		btnAddMoreFiles.setBounds(8, 47, 117, 25);
@@ -154,14 +188,15 @@ public class DiffusionPreprocessingAutoChooser extends JApplet {
 	}
 
 	private void createFile(int index, String textToSet) {
-		JLabel lblFileName_1 = new JLabel("File name " + index);
+		JLabel lblFileName_1 = new JLabel("File name " + (index + 1));
 		textField_2 = new JTextField();
 		textField_2.setColumns(20);
 		textField_2.setText(textToSet);
+		textfields.add(textField_2);
 		JPanel panel1 = new JPanel();
 		panel1.add(lblFileName_1);
 		panel1.add(textField_2);
-		panel1.setBounds(-71, 75 + (index - 1) * heightDifference, 475, 39);
+		panel1.setBounds(-71, 75 + index * heightDifference, 475, 39);
 		getContentPane().add(panel1);
 	}
 
