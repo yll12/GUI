@@ -10,6 +10,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,10 +49,11 @@ public class CloneDiffusion extends JApplet {
 	private JCheckBox chckbxBedpostx;
 	private JTextField textField_1;
 	private final String dummyToolTip = "Hi There";
-	private int dataIndex;
-	private final int heightDifference = 30;
+	private static int dataIndex;
+	private final static int heightDifference = 30;
 	private static JFrame f;
 	private final List<Triple<JLabel, JTextField, JButton>> inputs = new LinkedList<Triple<JLabel, JTextField, JButton>>();
+	private List<String> textFields = new ArrayList<String>();
 	private static JApplet applet;
 	private JPanel panel;
 
@@ -58,18 +61,18 @@ public class CloneDiffusion extends JApplet {
 	 * Create the applet.
 	 */
 	public CloneDiffusion() {
-		this.dataIndex = 0;
+		dataIndex = 0;
 	}
 
-	public CloneDiffusion(Integer num) {
-		this.dataIndex = num;
+	public CloneDiffusion(Integer num, List<String> textfields) {
+		dataIndex = num;
+		this.textFields = textfields;
 	}
 
 	@Override
 	public void init() {
 		GUIUtilities.initLookAndFeel("Nimbus");
 		panel = new JPanel();
-		getContentPane().setPreferredSize(new Dimension((int) (Math.random() * 2), 2));
 		getContentPane().setLayout(null);
 		getContentPane().setBackground(panel.getBackground());
 
@@ -126,6 +129,11 @@ public class CloneDiffusion extends JApplet {
 								listOfObserverThreads.add(i, null);
 							}
 						}
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				} while (!isObserversDead(listOfObserverThreads));
 
@@ -141,9 +149,10 @@ public class CloneDiffusion extends JApplet {
 			}
 
 			private void addThread(int index, Deque<Pair<String, String[]>> listOfInputs, List<Thread> listOfObserverThreads) {
-				final Thread execute = GUIUtilities.createExecutingThread(listOfInputs.removeFirst().getB());
+				Pair<String, String[]> input = listOfInputs.removeFirst();
+				final Thread execute = GUIUtilities.createExecutingThread(input.getB());
 				execute.start();
-				Thread observer = GUIUtilities.createObserverThread(execute, listOfInputs.removeFirst().getA());
+				Thread observer = GUIUtilities.createObserverThread(execute, input.getA());
 				observer.start();
 				listOfObserverThreads.remove(index);
 				listOfObserverThreads.add(index, observer);
@@ -236,9 +245,43 @@ public class CloneDiffusion extends JApplet {
 		});
 		getContentPane().add(btnCancel);
 
+		JButton btnClear = new JButton("Clear");
+		btnClear.setBounds(286, 104 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 66, 25);
+		getContentPane().add(btnClear);
+		btnClear.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				for (Triple<JLabel, JTextField, JButton> input : inputs) {
+					input.getB().setText(null);
+				}
+			}
+
+		});
+
 		JButton btnHelp = new JButton("Help");
-		btnHelp.setBounds(266, 104 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 88, 25);
+		btnHelp.setBounds(206, 104 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 66, 25);
 		getContentPane().add(btnHelp);
+
+		JButton btnSwitch = new JButton("Switch View to Auto");
+		btnSwitch.setBounds(6, 104 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 150, 25);
+		getContentPane().add(btnSwitch);
+		btnSwitch.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int ret = JOptionPane.showConfirmDialog(null, "Switch to Auto file chooser?", "Switch view", JOptionPane.OK_CANCEL_OPTION);
+				if (ret == JOptionPane.OK_OPTION) {
+					try {
+						Runtime.getRuntime().exec("java -jar DiffusionAuto.jar");
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					System.exit(0);
+				}
+			}
+
+		});
 
 		JLabel lblNumberOfDatasets = new JLabel("Number of datasets");
 		lblNumberOfDatasets.setBounds(6, 12, 171, 15);
@@ -323,8 +366,15 @@ public class CloneDiffusion extends JApplet {
 				dataIndex = Integer.parseInt(textField_1.getText()) - 1;
 
 				f.setBounds(400, 100, 510, 136 + GUIUtilities.increaseByHeight(dataIndex, heightDifference));
-
-				applet = new CloneDiffusion(dataIndex);
+				for (int i = 0; i < inputs.size(); i++) {
+					String inputText = inputs.get(i).getB().getText();
+					if (i < textFields.size()) {
+						textFields.set(i, inputText);
+					} else {
+						textFields.add(inputText);
+					}
+				}
+				applet = new CloneDiffusion(dataIndex, textFields);
 
 				applet.init();
 				f.setContentPane(applet.getContentPane());
@@ -339,19 +389,34 @@ public class CloneDiffusion extends JApplet {
 	private void initInputDirectory(final int index) {
 		for (int i = 0; i <= index; i++) {
 			final int x = i;
+			/*
+			 * ImageIcon icon = new ImageIcon("../resources/openFolder.jpg");
+			 * BufferedImage image = new BufferedImage(icon.getIconWidth(),
+			 * icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+			 * icon.paintIcon(null, image.getGraphics(), 0, 0); icon = new
+			 * ImageIcon(image.getScaledInstance(25, 25,
+			 * Image.SCALE_AREA_AVERAGING));
+			 */
 			inputs.add(new Triple<JLabel, JTextField, JButton>(new JLabel("Input data " + (i + 1)), new JTextField(), new JButton("Open")));
-			inputs.get(i).getA().setBounds(6, 7 + i * heightDifference, 111, 15);
-			panel.add(inputs.get(i).getA());
-			inputs.get(i).getB().setBounds(100, 1 + i * heightDifference, 308, 27);
-			panel.add(inputs.get(i).getB());
-			inputs.get(i).getB().setColumns(10);
-			inputs.get(i).getC().setBounds(415, 2 + i * heightDifference, 61, 27);
-			inputs.get(i).getC().addActionListener(new ActionListener() {
+			JLabel inputLabel = inputs.get(i).getA();
+			final JTextField inputText = inputs.get(i).getB();
+			JButton inputButton = inputs.get(i).getC();
+			inputLabel.setBounds(6, 7 + i * heightDifference, 111, 15);
+			panel.add(inputLabel);
+			inputText.setBounds(100, 1 + i * heightDifference, 308, 27);
+			if (i < textFields.size()) {
+				inputText.setText(textFields.get(i));
+			}
+			panel.add(inputText);
+			inputText.setColumns(10);
+			// inputButton.setBounds(415, 2 + i * heightDifference, 25, 25);
+			inputButton.setBounds(415, 2 + i * heightDifference, 61, 27);
+			inputButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					buildLoadDiag(x);
 				}
 			});
-			panel.add(inputs.get(i).getC());
+			panel.add(inputButton);
 		}
 	}
 
@@ -376,13 +441,21 @@ public class CloneDiffusion extends JApplet {
 
 	public static void main(String[] args) {
 		f = new JFrame();
-		applet = new CloneDiffusion();
+		if (args.length == 0) {
+			applet = new CloneDiffusion();
+		} else {
+			List<String> textField = new LinkedList<String>();
+			for (int i = 0; i < args.length; i++) {
+				textField.add(args[i]);
+				applet = new CloneDiffusion(textField.size() - 1, textField);
+			}
+		}
 
 		applet.init();
 
 		f.setContentPane(applet.getContentPane());
-		f.setBounds(400, 100, 510, 136);
-		f.setTitle("Diffusion Pre-processing");
+		f.setBounds(400, 100, 510, 166 + (dataIndex <= 9 ? (dataIndex * heightDifference) : (9 * heightDifference)));
+		f.setTitle("Diffusion Pre-processing(Manual)");
 		f.setVisible(true);
 
 		f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);

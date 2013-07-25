@@ -44,7 +44,7 @@ public class Main extends JApplet {
 		btnDiffusionPreprocessing.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					Runtime.getRuntime().exec("java -jar Diffusion.jar");
+					Runtime.getRuntime().exec("java -jar DiffusionAuto.jar");
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}

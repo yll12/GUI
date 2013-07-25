@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.DirectoryStream;
@@ -41,10 +42,25 @@ public class GUIUtilities {
 		try {
 			DirectoryStream<Path> ds = (DirectoryStream<Path>) newDirectoryStream(folderToIterate, pattern);
 			for (Path p : ds) {
-				result.add(p.getFileName().toString());
+				result.add(p.getParent().toString() + "/" + p.getFileName().toString());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		return result;
+	}
+
+	public static List<String> searchAllFile(String workdir, String pattern) {
+		List<String> result = new LinkedList<String>();
+		File parent = new File(workdir);
+		for (File subFolder : parent.listFiles()) {
+			if (subFolder.isDirectory()) {
+				result.addAll(searchAllFile(subFolder.getAbsolutePath(), pattern));
+			} else {
+				if (subFolder.getName().equals(pattern)) {
+					result.add(subFolder.getAbsolutePath());
+				}
+			}
 		}
 		return result;
 	}
@@ -131,7 +147,7 @@ public class GUIUtilities {
 				String workdir = getWorkingDirectory(inputData);
 				while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
 					if (hasFinished(inputData, workdir, "_error") || hasFinished(inputData, workdir, "_success")) {
-						break;
+						return;
 					}
 					try {
 						Thread.sleep(1000);
@@ -170,6 +186,7 @@ public class GUIUtilities {
 
 					while (br.readLine() != null) {
 					}
+					return;
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} catch (InterruptedException e) {
@@ -196,6 +213,10 @@ public class GUIUtilities {
 		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
 		testMethod(x);
 		testMethod(y);
+		String inputDir = "/staff/yl13/TestData";
+		String pattern = "unreg-data.nii.gz";
+		List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
+		System.out.println(inputs);
 	}
 
 	private static void testMethod(String x) {
