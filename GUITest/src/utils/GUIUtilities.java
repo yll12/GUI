@@ -1,5 +1,8 @@
 package utils;
 
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +12,15 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.JLabel;
 import javax.swing.UIManager;
+
+import sun.java2d.xr.MutableInteger;
 
 public class GUIUtilities {
 
@@ -208,18 +216,6 @@ public class GUIUtilities {
 		});
 	}
 
-	public static void main(String[] args) {
-		System.out.println("Testing utilities..");
-		String x = "/staff/yl13/Testing.zip";
-		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
-		testMethod(x);
-		testMethod(y);
-		String inputDir = "/staff/yl13/TestData";
-		String pattern = "unreg-data.nii.gz";
-		List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
-		System.out.println(inputs);
-	}
-
 	private static void testMethod(String x) {
 		System.out.println("Input is: " + x);
 		System.out.println("Work directory is: " + getWorkingDirectory(x));
@@ -227,4 +223,120 @@ public class GUIUtilities {
 		System.out.println("Error file name is: " + getFileName(x) + "_error");
 		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
 	}
+
+	public static void rearrangeList(List<String> inputTextFields) {
+		Collections.sort(inputTextFields, new Comparator<String>() {
+
+			private final boolean isDigit(char ch) {
+				return ch >= 48 && ch <= 57;
+			}
+
+			/**
+			 * Length of string is passed in for improved efficiency (only need
+			 * to calculate it once)
+			 **/
+			private final String getChunk(String s, int slength, int marker) {
+				StringBuilder chunk = new StringBuilder();
+				char c = s.charAt(marker);
+				chunk.append(c);
+				marker++;
+				if (isDigit(c)) {
+					while (marker < slength) {
+						c = s.charAt(marker);
+						if (!isDigit(c))
+							break;
+						chunk.append(c);
+						marker++;
+					}
+				} else {
+					while (marker < slength) {
+						c = s.charAt(marker);
+						if (isDigit(c))
+							break;
+						chunk.append(c);
+						marker++;
+					}
+				}
+				return chunk.toString();
+			}
+
+			@Override
+			public int compare(String o1, String o2) {
+				String s1 = o1;
+				String s2 = o2;
+
+				int thisMarker = 0;
+				int thatMarker = 0;
+				int s1Length = s1.length();
+				int s2Length = s2.length();
+
+				while (thisMarker < s1Length && thatMarker < s2Length) {
+					String thisChunk = getChunk(s1, s1Length, thisMarker);
+					thisMarker += thisChunk.length();
+
+					String thatChunk = getChunk(s2, s2Length, thatMarker);
+					thatMarker += thatChunk.length();
+
+					// If both chunks contain numeric characters, sort them
+					// numerically
+					int result = 0;
+					if (isDigit(thisChunk.charAt(0)) && isDigit(thatChunk.charAt(0))) {
+						try {
+							int i1 = Integer.parseInt(thisChunk);
+							int i2 = Integer.parseInt(thatChunk);
+							result = i1 - i2;
+						} catch (NumberFormatException e) {
+							e.printStackTrace();
+						}
+					} else {
+						result = thisChunk.compareTo(thatChunk);
+					}
+
+					if (result != 0)
+						return result;
+				}
+
+				return s1Length - s2Length;
+			}
+
+		});
+	}
+
+	public static boolean isDouble(double x) {
+		return x != Math.floor(x);
+	}
+
+	public static void main(String[] args) {
+		System.out.println("Testing utilities..");
+		String x = "/staff/yl13/Testing.zip";
+		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
+		testMethod(x);
+		testMethod(y);
+		String inputDir = "/staff/yl13/TestDataForT2";
+		String pattern = "*T2.*";
+		List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
+		System.out.println(inputs);
+		rearrangeList(inputs);
+		System.out.println(inputs);
+	}
+
+	public static void setFont(JLabel label) {
+		label.setFont(new Font(Font.SERIF, Font.PLAIN, 15));
+	}
+
+	public static void initializeConstraints(GridBagConstraints c) {
+		c.weighty = 1;
+		c.anchor = GridBagConstraints.WEST;
+		c.gridx = 0;
+		c.gridy = 0;
+	}
+
+	public static void createLine(MutableInteger lineNumber, Container content, GridBagConstraints c, String labelText) {
+		JLabel line = new JLabel(labelText);
+		GUIUtilities.setFont(line);
+		c.gridy = lineNumber.getValue();
+		lineNumber.setValue(lineNumber.getValue() + 1);
+		content.add(line, c);
+	}
+
 }

@@ -62,7 +62,7 @@ public class Main extends JApplet {
 		btnTPreprocessing.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					Runtime.getRuntime().exec("java -jar T2Preprocessing.jar");
+					Runtime.getRuntime().exec("java -jar T2PreprocessingAuto.jar");
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
