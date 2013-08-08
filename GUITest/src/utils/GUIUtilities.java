@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,6 +52,28 @@ public class GUIUtilities {
 			DirectoryStream<Path> ds = (DirectoryStream<Path>) newDirectoryStream(folderToIterate, pattern);
 			for (Path p : ds) {
 				result.add(p.getParent().toString() + "/" + p.getFileName().toString());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	/**
+	 * @param workdir
+	 *            working directory to iterate through
+	 * @param pattern
+	 *            pattern to look for
+	 * @return a list of files that matches the pattern in the working directory
+	 */
+	@SuppressWarnings("unchecked")
+	public static List<String> searchFileWithoutFullPath(String workdir, String pattern) {
+		List<String> result = new LinkedList<String>();
+		Path folderToIterate = FileSystems.getDefault().getPath(workdir);
+		try {
+			DirectoryStream<Path> ds = (DirectoryStream<Path>) newDirectoryStream(folderToIterate, pattern);
+			for (Path p : ds) {
+				result.add(p.getFileName().toString());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -170,13 +193,23 @@ public class GUIUtilities {
 
 	}
 
-	private static boolean hasFinished(final String inputData, String workdir, String pattern) {
-		List<String> list = GUIUtilities.searchFile(workdir, getFileName(inputData) + pattern);
+	public static boolean hasFinished(final String inputData, String workdir, String pattern) {
+		List<String> list = GUIUtilities.searchAllFile(workdir, getFileName(inputData) + pattern);
 		if (!list.isEmpty()) {
-			deleteFile(workdir, list.get(0));
+			deleteFile(workdir, getFileName(list.get(0)));
 			return true;
 		}
 		return false;
+	}
+	
+	public static void addThread(int index, Deque<Pair<String, String[]>> listOfInputs, List<Thread> listOfObserverThreads) {
+		Pair<String, String[]> input = listOfInputs.removeFirst();
+		final Thread execute = GUIUtilities.createExecutingThread(input.getB());
+		execute.start();
+		Thread observer = GUIUtilities.createObserverThread(execute, input.getA());
+		observer.start();
+		listOfObserverThreads.remove(index);
+		listOfObserverThreads.add(index, observer);
 	}
 
 	public static Thread createExecutingThread(final String[] cmdArray) {
@@ -214,14 +247,6 @@ public class GUIUtilities {
 
 			}
 		});
-	}
-
-	private static void testMethod(String x) {
-		System.out.println("Input is: " + x);
-		System.out.println("Work directory is: " + getWorkingDirectory(x));
-		System.out.println("File name is: " + getFileName(x));
-		System.out.println("Error file name is: " + getFileName(x) + "_error");
-		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
 	}
 
 	public static void rearrangeList(List<String> inputTextFields) {
@@ -306,20 +331,6 @@ public class GUIUtilities {
 		return x != Math.floor(x);
 	}
 
-	public static void main(String[] args) {
-		System.out.println("Testing utilities..");
-		String x = "/staff/yl13/Testing.zip";
-		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
-		testMethod(x);
-		testMethod(y);
-		String inputDir = "/staff/yl13/TestDataForT2";
-		String pattern = "*T2.*";
-		List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
-		System.out.println(inputs);
-		rearrangeList(inputs);
-		System.out.println(inputs);
-	}
-
 	public static void setFont(JLabel label) {
 		label.setFont(new Font(Font.SERIF, Font.PLAIN, 15));
 	}
@@ -339,4 +350,39 @@ public class GUIUtilities {
 		content.add(line, c);
 	}
 
+	public static void main(String[] args) {
+		System.out.println("Testing utilities..");
+		String x = "/staff/yl13/Testing.zip";
+		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
+		testMethod(x);
+		testMethod(y);
+		String inputDir = "/staff/yl13/TestDataForT2";
+		String pattern = "*T2.*";
+		List<String> inputs = GUIUtilities.searchAllFile(inputDir, pattern);
+		System.out.println(inputs);
+		rearrangeList(inputs);
+		System.out.println(inputs);
+		String inputData = "/staff/yl13/TestDataForT2/ABC10000/unreg-data.nii.gz";
+		inputDir = "/staff/yl13/TestDataForT2/ABC10000";
+		pattern = "unreg-data.nii.gz_error";
+		List<String> errors = GUIUtilities.searchAllFile(inputDir, pattern);
+		System.out.println(errors);
+		hasFinished(inputData, inputDir, "_error");
+		System.out.println(GUIUtilities.searchAllFile(inputDir, pattern));
+		String inputData2 = "/staff/yl13/TestDataForT2/NNU001/unreg-data.nii.gz";
+		inputDir = "/staff/yl13/TestDataForT2/NNU001";
+		pattern = "unreg-data.nii.gz_success";
+		List<String> success = GUIUtilities.searchAllFile(inputDir, pattern);
+		System.out.println(success);
+		hasFinished(inputData2, inputDir, "_success");
+		System.out.println(GUIUtilities.searchAllFile(inputDir, pattern));
+	}
+
+	private static void testMethod(String x) {
+		System.out.println("Input is: " + x);
+		System.out.println("Work directory is: " + getWorkingDirectory(x));
+		System.out.println("File name is: " + getFileName(x));
+		System.out.println("Error file name is: " + getFileName(x) + "_error");
+		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
+	}
 }

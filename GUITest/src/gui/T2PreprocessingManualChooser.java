@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -44,10 +45,12 @@ import javax.swing.event.ChangeListener;
 
 import sun.java2d.xr.MutableInteger;
 import utils.GUIUtilities;
+import utils.Pair;
 import utils.Triple;
 
 @SuppressWarnings("serial")
 public class T2PreprocessingManualChooser extends JApplet {
+	private JCheckBox chckbxParcellationAndSegmentation;
 	private JTextField textField_2;
 	private JTextField textField_numberOfConcurrentProcess;
 	private List<String> ageTextFields = new LinkedList<String>();
@@ -150,15 +153,167 @@ public class T2PreprocessingManualChooser extends JApplet {
 		btnCancel.setBounds(429, 175 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 71, 25);
 		getContentPane().add(btnCancel);
 
-		JButton btnGo = new JButton("Go");
-		btnGo.addActionListener(new ActionListener() {
+		JButton btnStartProcess = new JButton("Go");
+		btnStartProcess.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// Run Script here
+				int preferredNumberOfConcurrentProcess;
+				try {
+					preferredNumberOfConcurrentProcess = Integer.parseInt(textField_numberOfConcurrentProcess.getText());
+					if (preferredNumberOfConcurrentProcess <= 0) {
+						JOptionPane.showMessageDialog(null, "The number of concurrent process must be positive integer");
+						return;
+					}
+				} catch (NumberFormatException e1) {
+					JOptionPane.showMessageDialog(null, "Please specify the number of concurrent process(must be positive integer)");
+					return;
+				}
+
+				Deque<Pair<String, String[]>> listOfInputsForT2 = new LinkedList<Pair<String, String[]>>();
+				List<Thread> listOfObserverThreads = new LinkedList<Thread>();
+				for (int i = 0; i <= dataIndex; i++) {
+					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
+					String inputData = triple.getA().getText();
+					String age = triple.getB().getText();
+					populateInputListForProcessing(inputData, i, age, listOfInputsForT2);
+				}
+				int numberOfConcurrentProcess =
+						GUIUtilities.getNumberOfConcurrentProcess(listOfInputsForT2.size(), preferredNumberOfConcurrentProcess);
+				for (int i = 0; i < numberOfConcurrentProcess; i++) {
+					listOfObserverThreads.add(null);
+				}
+				do {
+					for (int i = 0; i < numberOfConcurrentProcess; i++) {
+						Thread t = listOfObserverThreads.get(i);
+						if (!listOfInputsForT2.isEmpty()) {
+							if (t == null) {
+								GUIUtilities.addThread(i, listOfInputsForT2, listOfObserverThreads);
+								continue;
+							} else if ((!t.isAlive() || t.getState() == Thread.State.TERMINATED)) {
+								GUIUtilities.addThread(i, listOfInputsForT2, listOfObserverThreads);
+								continue;
+							}
+						} else {
+							if (t != null && (!t.isAlive() || t.getState() == Thread.State.TERMINATED)) {
+								listOfObserverThreads.remove(i);
+								listOfObserverThreads.add(i, null);
+							}
+						}
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+				} while (!isObserversDead(listOfObserverThreads));
+
+				if (chckbxParcellationAndSegmentation.isSelected()) {
+
+					Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
+					for (int i = 0; i <= dataIndex; i++) {
+						final int x = i;
+						Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
+						String inputData = triple.getA().getText();
+						String age = triple.getB().getText();
+						if (inputData.trim().isEmpty()) {
+
+							continue;
+						}
+
+						if (!GUIUtilities.checkInput(inputData, ".nii.gz") && !GUIUtilities.checkInput(inputData, "nii")) {
+							Thread t = new Thread(new Runnable() {
+								public void run() {
+									JOptionPane.showMessageDialog(null, "Input " + (x + 1) + ": " + "this is not an image file!");
+								}
+							});
+							t.start();
+
+							continue;
+						}
+
+						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+
+						String[] args = { inputData, age, workingdir };
+
+						String script = "'cd ../ScriptsRunByGUI; " + "./segmentation.sh ";
+						for (int j = 0; j < args.length; i++) {
+							script += args[j];
+							if (j < args.length - 1) {
+								script += " ";
+							} else {
+								script += ";'";
+							}
+						}
+						String[] cmdArray = { "gnome-terminal", "--disable-factory", "-e", "bash -c " + script };
+						listOfInputsForSegmentation.add(new Pair<String, String[]>(inputData, cmdArray));
+					}
+
+					for (Pair<String, String[]> pair : listOfInputsForSegmentation) {
+						String[] cmdArray = pair.getB();
+						String inputData = pair.getA();
+						Thread t = GUIUtilities.createExecutingThread(cmdArray);
+						t.start();
+						String workdir = GUIUtilities.getWorkingDirectory(inputData);
+						while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
+							if (GUIUtilities.hasFinished(inputData, workdir, "_error") || GUIUtilities.hasFinished(inputData, workdir, "_success")) {
+								continue;
+							}
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e1) {
+								e1.printStackTrace();
+							}
+						}
+					}
+				}
+
 			}
+
+			private <T> boolean isObserversDead(List<T> list) {
+				for (int i = 0; i < list.size(); i++) {
+					if (list.get(i) != null) {
+						return false;
+					}
+				}
+				return true;
+			}
+
+			private void populateInputListForProcessing(String inputData, final int index, String age, Deque<Pair<String, String[]>> listOfInputs) {
+				if (inputData.trim().isEmpty()) {
+
+					return;
+				}
+
+				if (!GUIUtilities.checkInput(inputData, ".nii.gz") && !GUIUtilities.checkInput(inputData, "nii")) {
+					Thread t = new Thread(new Runnable() {
+						public void run() {
+							JOptionPane.showMessageDialog(null, "Input " + (index + 1) + ": " + "this is not an image file!");
+						}
+					});
+					t.start();
+
+					return;
+				}
+
+				String[] args = { inputData, age };
+
+				String script = "'cd ../ScriptsRunByGUI; " + "./T2PreprocessingScripts.sh ";
+				for (int i = 0; i < args.length; i++) {
+					script += args[i];
+					if (i < args.length - 1) {
+						script += " ";
+					} else {
+						script += ";'";
+					}
+				}
+				String[] cmdArray = { "gnome-terminal", "--disable-factory", "-e", "bash -c " + script };
+				listOfInputs.add(new Pair<String, String[]>(inputData, cmdArray));
+
+			}
+
 		});
-		btnGo.setToolTipText(go2ToolTip);
-		btnGo.setBounds(380, 175 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 45, 25);
-		getContentPane().add(btnGo);
+		btnStartProcess.setToolTipText(go2ToolTip);
+		btnStartProcess.setBounds(380, 175 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 45, 25);
+		getContentPane().add(btnStartProcess);
 
 		JButton btnClear = new JButton("Clear");
 		btnClear.setBounds(310, 175 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 65, 25);
@@ -230,10 +385,12 @@ public class T2PreprocessingManualChooser extends JApplet {
 						GUIUtilities.createLine(lineNumber, content, c, "Number of Concurrent Process : Specify the number of process to be run "
 								+ "at any given time(default as 4)");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "Switch View to Auto : A convenient way to find all the image data by specifying "
-								+ "the parent folder of all the image files");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"Switch View to Auto : A convenient way to find all the image data by specifying "
+										+ "the parent folder of all the image files");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "Clear : Clear all input data text fields and reset all ages to 36 (default)");
+						GUIUtilities
+								.createLine(lineNumber, content, c, "Clear : Clear all input data text fields and reset all ages to 36 (default)");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Go : Starts the T2-preprocessing");
 					}
@@ -249,7 +406,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 			}
 		});
 
-		JCheckBox chckbxParcellationAndSegmentation = new JCheckBox("Parcellation and segmentation");
+		chckbxParcellationAndSegmentation = new JCheckBox("Parcellation and segmentation");
 		chckbxParcellationAndSegmentation.setBounds(6, 90 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 260, 50);
 		getContentPane().add(chckbxParcellationAndSegmentation);
 		chckbxParcellationAndSegmentation.setToolTipText(parcellationToolTip);
@@ -420,18 +577,18 @@ public class T2PreprocessingManualChooser extends JApplet {
 			panel.add(lblInputDirectory);
 
 			textFields.add(new Triple<JTextField, JTextField, JSlider>(new JTextField(), new JTextField(), new JSlider()));
-			final JTextField textField = textFields.get(i).getA();
-			textField.setToolTipText(inputToolTip);
-			textField.setBounds(108, 2 + 2 * i * heightDifference, 313, 27);
-			panel.add(textField);
-			textField.setColumns(10);
+			final JTextField textField_inputDirectory = textFields.get(i).getA();
+			textField_inputDirectory.setToolTipText(inputToolTip);
+			textField_inputDirectory.setBounds(108, 2 + 2 * i * heightDifference, 313, 27);
+			panel.add(textField_inputDirectory);
+			textField_inputDirectory.setColumns(10);
 			if (i < inputTextFields.size()) {
-				textField.setText(inputTextFields.get(i));
+				textField_inputDirectory.setText(inputTextFields.get(i));
 			}
 			JButton btnOpen = new JButton("Open");
 			btnOpen.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					buildLoadDiag(x, textField);
+					buildLoadDiag(x, textField_inputDirectory);
 				}
 			});
 
@@ -444,8 +601,8 @@ public class T2PreprocessingManualChooser extends JApplet {
 			lblAgeAtScan.setToolTipText(ageToolTip);
 			panel.add(lblAgeAtScan);
 
-			final JTextField textField_1 = textFields.get(i).getB();
-			textField_1.setToolTipText(ageToolTip);
+			final JTextField textField_age = textFields.get(i).getB();
+			textField_age.setToolTipText(ageToolTip);
 			final JSlider ageSlider = textFields.get(i).getC();
 			ageSlider.setToolTipText(ageToolTip);
 			ageSlider.setBounds(150, 9 + (2 * i + 1) * heightDifference, 214, 15);
@@ -456,17 +613,17 @@ public class T2PreprocessingManualChooser extends JApplet {
 
 				@Override
 				public void stateChanged(ChangeEvent e) {
-					textField_1.setText(String.valueOf(ageSlider.getValue()));
+					textField_age.setText(String.valueOf(ageSlider.getValue()));
 				}
 
 			});
 			panel.add(ageSlider);
-			textField_1.setBounds(381, 2 + (2 * i + 1) * heightDifference, 40, 27);
-			panel.add(textField_1);
-			textField_1.setColumns(10);
-			textField_1.setText(String.valueOf(ageSlider.getValue()));
+			textField_age.setBounds(381, 2 + (2 * i + 1) * heightDifference, 40, 27);
+			panel.add(textField_age);
+			textField_age.setColumns(10);
+			textField_age.setText(String.valueOf(ageSlider.getValue()));
 
-			textField_1.setInputVerifier(new InputVerifier() {
+			textField_age.setInputVerifier(new InputVerifier() {
 
 				@Override
 				public boolean verify(JComponent input) {
@@ -502,11 +659,11 @@ public class T2PreprocessingManualChooser extends JApplet {
 				}
 
 			});
-			textField_1.addKeyListener(new KeyAdapter() {
+			textField_age.addKeyListener(new KeyAdapter() {
 
 				@Override
 				public void keyReleased(KeyEvent ke) {
-					String typed = textField_1.getText();
+					String typed = textField_age.getText();
 					if (ke.getKeyCode() == KeyEvent.VK_BACK_SPACE || !typed.matches("\\d+") || typed.length() > 3 || typed.length() == 1) {
 						return;
 					}
@@ -540,7 +697,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 					});
 					t.start();
 				}
-				textField_1.setText(String.valueOf((int) age));
+				textField_age.setText(String.valueOf((int) age));
 				ageSlider.setValue((int) age);
 			}
 

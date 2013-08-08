@@ -83,6 +83,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 	public DiffusionPreprocessingManualChooser(Integer num, List<String> textfields) {
 		dataIndex = num;
 		this.textFields = textfields;
+		GUIUtilities.rearrangeList(textFields);
 	}
 
 	@Override
@@ -157,10 +158,10 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 						Thread t = listOfObserverThreads.get(i);
 						if (!listOfInputs.isEmpty()) {
 							if (t == null) {
-								addThread(i, listOfInputs, listOfObserverThreads);
+								GUIUtilities.addThread(i, listOfInputs, listOfObserverThreads);
 								continue;
 							} else if ((!t.isAlive() || t.getState() == Thread.State.TERMINATED)) {
-								addThread(i, listOfInputs, listOfObserverThreads);
+								GUIUtilities.addThread(i, listOfInputs, listOfObserverThreads);
 								continue;
 							}
 						} else {
@@ -186,16 +187,6 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 					}
 				}
 				return true;
-			}
-
-			private void addThread(int index, Deque<Pair<String, String[]>> listOfInputs, List<Thread> listOfObserverThreads) {
-				Pair<String, String[]> input = listOfInputs.removeFirst();
-				final Thread execute = GUIUtilities.createExecutingThread(input.getB());
-				execute.start();
-				Thread observer = GUIUtilities.createObserverThread(execute, input.getA());
-				observer.start();
-				listOfObserverThreads.remove(index);
-				listOfObserverThreads.add(index, observer);
 			}
 
 			private void populateInputListForProcessing(String inputData, final int index, Deque<Pair<String, String[]>> listOfInputs) {
@@ -263,7 +254,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 
 			private String getTextFile(String workingdir, String filename) throws NoSuchFileException {
 
-				List<String> possibleFiles = GUIUtilities.searchFile(workingdir, "*" + filename + "*");
+				List<String> possibleFiles = GUIUtilities.searchFileWithoutFullPath(workingdir, "*" + filename + "*");
 				if (possibleFiles.isEmpty()) {
 					throw new NoSuchFileException(filename);
 				} else if (possibleFiles.size() > 1) {
