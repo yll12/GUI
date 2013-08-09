@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import sun.java2d.xr.MutableInteger;
@@ -248,6 +249,44 @@ public class GUIUtilities {
 			}
 		});
 	}
+	
+	public static
+        void
+        populateInputs(
+                Deque<Pair<String, String[]>> list,
+                String inputData, String[] args, String scriptName) {
+    String script = "'cd ../ScriptsRunByGUI; " + scriptName;
+    for (int i = 0; i < args.length; i++) {
+            script += args[i];
+            if (i < args.length - 1) {
+                    script += " ";
+            } else {
+                    script += ";'";
+            }
+    }
+    String[] cmdArray = { "gnome-terminal", "--disable-factory", "-e", "bash -c " + script };
+    list.add(new Pair<String, String[]>(inputData, cmdArray));
+}
+	
+	public static boolean isInputValid(final int x, String inputData) {
+            if (inputData.trim().isEmpty()) {
+
+                    return false;
+            }
+
+            if (!GUIUtilities.checkInput(inputData, ".nii.gz") && !GUIUtilities.checkInput(inputData, "nii")) {
+                    Thread t = new Thread(new Runnable() {
+                            public void run() {
+                                    JOptionPane.showMessageDialog(null, "Input " + (x + 1) + ": " + "this is not an image file!");
+                            }
+                    });
+                    t.start();
+
+                    return false;
+            }
+            return true;
+        }
+
 
 	public static void rearrangeList(List<String> inputTextFields) {
 		Collections.sort(inputTextFields, new Comparator<String>() {
