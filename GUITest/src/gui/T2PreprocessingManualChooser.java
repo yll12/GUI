@@ -142,7 +142,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 
 		errors = new JFrame();
 		errors.setVisible(false);
-		
+
 		errors.pack();
 
 		JButton btnCancel = new JButton("Cancel");

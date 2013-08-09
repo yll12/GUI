@@ -1,23 +1,23 @@
 #! /bin/bash
 
-inputT2=$1
-subj=`fsl5.0-remove_ext $inputT2`
+imageData=$1
+subj=`fsl5.0-remove_ext $imageData`
 age=$2
 
 
-cp $inputT2 ${subj}_original
+cp $imageData ${subj}_original
 
 ##Convert image to float
 
-PreprocessingScripts/convert $inputT2 $inputT2 -float
+PreprocessingScripts/convert $imageData $imageData -float
 
 ##Rescale image
 
-PreprocessingScripts/rescale $inputT2 $inputT2 0 1000 
+PreprocessingScripts/rescale $imageData $imageData 0 1000 
 
 ##brain extract
 
-fsl5.0-bet $inputT2 ${subj}_brain -R -f 0.3 -m
+fsl5.0-bet $imageData ${subj}_brain -R -f 0.3 -m
 
 ##/path/NNU996_T2.nii.gz  /path/${subj}_brain 
 
