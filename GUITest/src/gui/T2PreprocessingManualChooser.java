@@ -69,6 +69,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 	private final String parcellationToolTip = "Enable this to run parcellation and segmentation process";
 	private final String ageToolTip = "Specify age at scan(possible range are: 28 ~ 44)";
 	private final String processToolTip = "Specify the number of process to be run at the same time";
+	private final String segmentationToolTip = "Run this if and only if you have completed T2-Preprocessing";
 	private JPanel panel;
 	private static final int heightDifference = 30;
 	private static int dataIndex = 0;
@@ -169,31 +170,26 @@ public class T2PreprocessingManualChooser extends JApplet {
 				}
 
 				Deque<Pair<String, String[]>> listOfInputsForT2 = new LinkedList<Pair<String, String[]>>();
-                                Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
+				Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
 				List<Thread> listOfObserverThreads = new LinkedList<Thread>();
 				for (int i = 0; i <= dataIndex; i++) {
 					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
 					String inputData = triple.getA().getText();
 					String age = triple.getB().getText();
-                                        if (GUIUtilities.isInputValid(i, inputData)) {
-                                            
-                                            String[] args = { inputData, age };
-                                            
-                                            GUIUtilities.populateInputs(listOfInputsForT2,
-                                                    inputData, args, "./segmentation.sh ");
-                                            
-                                            if (chckbxParcellationAndSegmentation.isSelected()) {
-                                                
-                                                String workingdir = GUIUtilities.getWorkingDirectory(inputData);
-                                                
-                                                String[] args2 = { inputData, age, workingdir };
-                                                
-                                                GUIUtilities.populateInputs(listOfInputsForSegmentation,
-                                                        inputData, args2, "./segmentation.sh ");
-                                            
-                                            }
-                                        }
+					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+					if (GUIUtilities.isInputValid(i, inputData)) {
 
+						String[] args = { inputData, age, workingdir };
+
+						GUIUtilities.populateInputs(listOfInputsForT2, inputData, args, "./T2PreprocessingScripts.sh ");
+
+						if (chckbxParcellationAndSegmentation.isSelected()) {
+
+							GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args, "./segmentation.sh ");
+
+						}
+
+					}
 				}
 				int numberOfConcurrentProcess =
 						GUIUtilities.getNumberOfConcurrentProcess(listOfInputsForT2.size(), preferredNumberOfConcurrentProcess);
@@ -244,14 +240,10 @@ public class T2PreprocessingManualChooser extends JApplet {
 							}
 						}
 					}
-					
 				}
 
 			}
 
-            
-
-            
 			private <T> boolean isObserversDead(List<T> list) {
 				for (int i = 0; i < list.size(); i++) {
 					if (list.get(i) != null) {
@@ -260,7 +252,6 @@ public class T2PreprocessingManualChooser extends JApplet {
 				}
 				return true;
 			}
-
 
 		});
 		btnStartProcess.setToolTipText(go2ToolTip);
@@ -286,50 +277,47 @@ public class T2PreprocessingManualChooser extends JApplet {
 
 		JButton btnRunSegmentationOnly = new JButton("Run Segmentation Only");
 		btnRunSegmentationOnly.setBounds(300, 140 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 180, 25);
-		btnRunSegmentationOnly.setToolTipText("");
+		btnRunSegmentationOnly.setToolTipText(segmentationToolTip);
 		getContentPane().add(btnRunSegmentationOnly);
 		btnRunSegmentationOnly.addActionListener(new ActionListener() {
 
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
-                for (int i = 0; i <= dataIndex; i++) {
-                        Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
-                        String inputData = triple.getA().getText();
-                        String age = triple.getB().getText();
-                        if (GUIUtilities.isInputValid(i, inputData)) {
-                                
-                                String workingdir = GUIUtilities.getWorkingDirectory(inputData);
-                                
-                                String[] args2 = { inputData, age, workingdir };
-                                
-                                GUIUtilities.populateInputs(listOfInputsForSegmentation,
-                                        inputData, args2, "./segmentation.sh ");
-                        }
-                }
-                        for (Pair<String, String[]> pair : listOfInputsForSegmentation) {
-                            String[] cmdArray = pair.getB();
-                            String inputData = pair.getA();
-                            Thread t = GUIUtilities.createExecutingThread(cmdArray);
-                            t.start();
-                            String workdir = GUIUtilities.getWorkingDirectory(inputData);
-                            while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
-                                    if (GUIUtilities.hasFinished(inputData, workdir, "_error") || GUIUtilities.hasFinished(inputData, workdir, "_success")) {
-                                            break;
-                                    }
-                                    try {
-                                            Thread.sleep(1000);
-                                    } catch (InterruptedException e1) {
-                                            e1.printStackTrace();
-                                    }
-                            }
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
+				for (int i = 0; i <= dataIndex; i++) {
+					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
+					String inputData = triple.getA().getText();
+					String age = triple.getB().getText();
+					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+					if (GUIUtilities.isInputValid(i, inputData)) {
 
-                }
+						String[] args = { inputData, age, workingdir };
 
-            }
-		    
+						GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args, "./segmentation.sh ");
+
+					}
+				}
+				for (Pair<String, String[]> pair : listOfInputsForSegmentation) {
+					String[] cmdArray = pair.getB();
+					String inputData = pair.getA();
+					Thread t = GUIUtilities.createExecutingThread(cmdArray);
+					t.start();
+					String workdir = GUIUtilities.getWorkingDirectory(inputData);
+					while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
+						if (GUIUtilities.hasFinished(inputData, workdir, "_error") || GUIUtilities.hasFinished(inputData, workdir, "_success")) {
+							break;
+						}
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+			}
+
 		});
-		
+
 		JButton btnSwitchViewToAuto = new JButton("Switch View to Auto");
 		btnSwitchViewToAuto.setBounds(6, 175 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 150, 25);
 		btnSwitchViewToAuto.setToolTipText(switchViewToolTip);
