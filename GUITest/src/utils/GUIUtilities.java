@@ -85,17 +85,21 @@ public class GUIUtilities {
 	public static List<String> searchAllFile(String workdir, String pattern) {
 		List<String> result = new LinkedList<String>();
 		File parent = new File(workdir);
-		for (File subFolder : parent.listFiles()) {
-			if (subFolder.isDirectory()) {
-				result.addAll(searchAllFile(subFolder.getAbsolutePath(), pattern));
-			} else {
-				PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
-				if (matcher.matches(subFolder.toPath().getFileName())) {
-					result.add(subFolder.getAbsolutePath());
+		File[] files = parent.listFiles();
+		if (files != null) {
+			for (File subFolder : files) {
+				if (subFolder.isDirectory()) {
+					result.addAll(searchAllFile(subFolder.getAbsolutePath(), pattern));
+				} else {
+					PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+					if (matcher.matches(subFolder.toPath().getFileName())) {
+						result.add(subFolder.getAbsolutePath());
+					}
 				}
 			}
 		}
 		return result;
+
 	}
 
 	/**
@@ -124,7 +128,9 @@ public class GUIUtilities {
 	 * @return /staff/yl13
 	 */
 	public static String getWorkingDirectory(String given) {
-		assert given != null;
+		if (given == null) {
+			JOptionPane.showMessageDialog(null, "Error in getting working directory!");
+		}
 		return given.substring(0, given.lastIndexOf("/"));
 	}
 
@@ -384,7 +390,28 @@ public class GUIUtilities {
 		content.add(line, c);
 	}
 
-	public static void main(String[] args) {
+	public static String checkAge(String age) {
+		double ageAtScan = 0;
+		try {
+			ageAtScan = Double.parseDouble(age);
+			if (ageAtScan > 44) {
+				return "44";
+			} else if (ageAtScan < 28) {
+				return "28";
+			}
+			if (isDouble(ageAtScan)) {
+				return String.valueOf((int) Math.round(ageAtScan));
+			}
+			if (age.contains(".")) {
+				return age.substring(0, age.indexOf("."));
+			}
+		} catch (NumberFormatException e) {
+			System.out.println("Should be impossible");
+		}
+		return age;
+	}
+
+	public static void main(String[] args) throws IOException {
 		System.out.println("Testing utilities..");
 		String x = "/staff/yl13/Testing.zip";
 		String y = "/staff/yl13/TestData/Test4/unreg-data.nii.gz";
@@ -397,7 +424,7 @@ public class GUIUtilities {
 		rearrangeList(inputs);
 		System.out.println(inputs);
 		String inputData = "/staff/yl13/TestDataForT2/ABC10000/unreg-data.nii.gz";
-		inputDir = "/staff/yl13/TestDataForT2/ABC10000";
+		inputDir = "/staff/yl13/TestDataForT2/ABC1000/";
 		pattern = "unreg-data.nii.gz_error";
 		List<String> errors = GUIUtilities.searchAllFile(inputDir, pattern);
 		System.out.println(errors);
@@ -410,6 +437,23 @@ public class GUIUtilities {
 		System.out.println(success);
 		hasFinished(inputData2, inputDir, "_success");
 		System.out.println(GUIUtilities.searchAllFile(inputDir, pattern));
+		List<String> list = GUIUtilities.searchAllFile("/staff/yl13/TestDataForT2/NNU001", getFileName("NNU001_T2.nii.gz") + "_success");
+		System.out.println(list);
+		hasFinished("NNU001_T2.nii.gz", "/staff/yl13/TestDataForT2/NNU001", "_success");
+		System.out.println(GUIUtilities.searchAllFile("/staff/yl13/TestDataForT2/NNU001", getFileName("NNU001_T2.nii.gz") + "_success"));
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		String age = null;
+		while ((age = br.readLine()) != null) {
+			try {
+				double ageAtScan = Double.parseDouble(age);
+				System.out.println(ageAtScan);
+				age = checkAge(age);
+				System.out.println("Final result is " + age);
+			} catch (NumberFormatException e) {
+				System.out.println("I wasn't expecting that!");
+			}
+		}
+
 	}
 
 	private static void testMethod(String x) {
@@ -419,4 +463,5 @@ public class GUIUtilities {
 		System.out.println("Error file name is: " + getFileName(x) + "_error");
 		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
 	}
+
 }

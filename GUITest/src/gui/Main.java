@@ -76,14 +76,23 @@ public class Main extends JApplet {
 		gbc_btnTPreprocessing.gridy = 1;
 		getContentPane().add(btnTPreprocessing, gbc_btnTPreprocessing);
 
-		JButton btnEtcEtc = new JButton("ETC ETC");
-		GridBagConstraints gbc_btnEtcEtc = new GridBagConstraints();
-		gbc_btnEtcEtc.anchor = GridBagConstraints.NORTH;
-		gbc_btnEtcEtc.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnEtcEtc.insets = new Insets(0, 0, 5, 0);
-		gbc_btnEtcEtc.gridx = 0;
-		gbc_btnEtcEtc.gridy = 2;
-		getContentPane().add(btnEtcEtc, gbc_btnEtcEtc);
+		JButton btnCorticalAnalysis = new JButton("Cortical Analysis");
+		GridBagConstraints gbc_btnCorticalAnalysis = new GridBagConstraints();
+		gbc_btnCorticalAnalysis.anchor = GridBagConstraints.NORTH;
+		gbc_btnCorticalAnalysis.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnCorticalAnalysis.insets = new Insets(0, 0, 5, 0);
+		gbc_btnCorticalAnalysis.gridx = 0;
+		gbc_btnCorticalAnalysis.gridy = 2;
+		btnCorticalAnalysis.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Runtime.getRuntime().exec("java -jar CorticalAnalysisAuto.jar");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		getContentPane().add(btnCorticalAnalysis, gbc_btnCorticalAnalysis);
 
 		JButton btnCancel = new JButton("Exit");
 		btnCancel.addActionListener(new ActionListener() {

@@ -51,7 +51,7 @@ import utils.Triple;
 @SuppressWarnings("serial")
 public class T2PreprocessingManualChooser extends JApplet {
 	private JCheckBox chckbxParcellationAndSegmentation;
-	private JTextField textField_2;
+	private JTextField textField_inputCount;
 	private JTextField textField_numberOfConcurrentProcess;
 	private List<String> ageTextFields = new LinkedList<String>();
 	private List<String> inputTextFields = new LinkedList<String>();
@@ -177,21 +177,26 @@ public class T2PreprocessingManualChooser extends JApplet {
 					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
 					String inputData = triple.getA().getText();
 					String age = triple.getB().getText();
-					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+					age = GUIUtilities.checkAge(age);
 					if (GUIUtilities.isInputValid(i, inputData)) {
 
+						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+						
 						String[] args = { inputData, age, workingdir };
 
 						GUIUtilities.populateInputs(listOfInputsForT2, inputData, args, "./T2PreprocessingScripts.sh ");
 
 						if (chckbxParcellationAndSegmentation.isSelected()) {
 
-							GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args, "./segmentation.sh ");
+							String[] args2 = { GUIUtilities.getFileName(inputData), age, workingdir };
+
+							GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args2, "./segmentation.sh ");
 
 						}
 
 					}
 				}
+				
 				int numberOfConcurrentProcess =
 						GUIUtilities.getNumberOfConcurrentProcess(listOfInputsForT2.size(), preferredNumberOfConcurrentProcess);
 				for (int i = 0; i < numberOfConcurrentProcess; i++) {
@@ -289,19 +294,18 @@ public class T2PreprocessingManualChooser extends JApplet {
 					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
 					String inputData = triple.getA().getText();
 					String age = triple.getB().getText();
-					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+					age = GUIUtilities.checkAge(age);
 					if (GUIUtilities.isInputValid(i, inputData)) {
-
-						String[] args = { inputData, age, workingdir };
-
+						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
+						String[] args = { GUIUtilities.getFileName(inputData), age, workingdir };
 						GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args, "./segmentation.sh ");
-
 					}
 				}
+				Thread t;
 				for (Pair<String, String[]> pair : listOfInputsForSegmentation) {
 					String[] cmdArray = pair.getB();
 					String inputData = pair.getA();
-					Thread t = GUIUtilities.createExecutingThread(cmdArray);
+					t = GUIUtilities.createExecutingThread(cmdArray);
 					t.start();
 					String workdir = GUIUtilities.getWorkingDirectory(inputData);
 					while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
@@ -311,7 +315,8 @@ public class T2PreprocessingManualChooser extends JApplet {
 						try {
 							Thread.sleep(1000);
 						} catch (InterruptedException e1) {
-							e1.printStackTrace();
+							JOptionPane.showMessageDialog(null, "Unexpected Error Occurred!");
+							continue;
 						}
 					}
 				}
@@ -380,6 +385,9 @@ public class T2PreprocessingManualChooser extends JApplet {
 								.createLine(lineNumber, content, c, "Clear : Clear all input data text fields and reset all ages to 36 (default)");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Go : Starts the T2-preprocessing");
+						GUIUtilities.createLine(lineNumber, content, c, " ");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"Run Segmentation Only : Starts the segmentation process(Only run this if T2-preprocessing is finished).");
 					}
 				};
 				applet.init();
@@ -426,18 +434,18 @@ public class T2PreprocessingManualChooser extends JApplet {
 
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				textField_2.setText(String.valueOf(dataSlider.getValue()));
+				textField_inputCount.setText(String.valueOf(dataSlider.getValue()));
 			}
 
 		});
 
-		textField_2 = new JTextField();
-		textField_2.setBounds(362, 8, 50, 27);
-		getContentPane().add(textField_2);
-		textField_2.setColumns(10);
-		textField_2.setText(String.valueOf(dataSlider.getValue()));
-		textField_2.setToolTipText(dataToolTip);
-		textField_2.setInputVerifier(new InputVerifier() {
+		textField_inputCount = new JTextField();
+		textField_inputCount.setBounds(362, 8, 50, 27);
+		getContentPane().add(textField_inputCount);
+		textField_inputCount.setColumns(10);
+		textField_inputCount.setText(String.valueOf(dataSlider.getValue()));
+		textField_inputCount.setToolTipText(dataToolTip);
+		textField_inputCount.setInputVerifier(new InputVerifier() {
 
 			@Override
 			public boolean verify(JComponent input) {
@@ -456,11 +464,11 @@ public class T2PreprocessingManualChooser extends JApplet {
 			}
 
 		});
-		textField_2.addKeyListener(new KeyAdapter() {
+		textField_inputCount.addKeyListener(new KeyAdapter() {
 
 			@Override
 			public void keyReleased(KeyEvent ke) {
-				String typed = textField_2.getText();
+				String typed = textField_inputCount.getText();
 				try {
 					int x = Integer.parseInt(typed);
 					if (!typed.matches("\\d+") || typed.length() > 3 || x > 10 || x < 1) {
@@ -524,7 +532,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 		JButton btnGo2 = new JButton("Go");
 		btnGo2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				dataIndex = Integer.parseInt(textField_2.getText()) - 1;
+				dataIndex = Integer.parseInt(textField_inputCount.getText()) - 1;
 
 				f.setSize(520, 235 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference));
 

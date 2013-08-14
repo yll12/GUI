@@ -53,6 +53,3 @@ else
 	echo "Error" > $3/$filename"_error"
 	read
 fi
-
-cd $OLDPWD
-

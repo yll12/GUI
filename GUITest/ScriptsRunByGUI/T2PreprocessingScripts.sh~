@@ -1,48 +1,52 @@
 #! /bin/bash
 
-inputT2=$1
-subj=`fsl5.0-remove_ext $inputT2`
+imageData=$1  ##/staff/yl13/TestData/NNU996/NNU996_T2.nii.gz
+subj=`fsl5.0-remove_ext $imageData`
 age=$2
 
+OLDPWD=$(pwd)
+cd ../PreprocessingScripts
 
-cp $inputT2 ${subj}_original
+cp $imageData ${subj}_original
 
 ##Convert image to float
 
-PreprocessingScripts/convert $inputT2 $inputT2 -float
+./convert $imageData $imageData -float
 
 ##Rescale image
 
-PreprocessingScripts/rescale $inputT2 $inputT2 0 1000 
+./rescale $imageData $imageData 0 1000 
 
 ##brain extract
 
-fsl5.0-bet $inputT2 ${subj}_brain -R -f 0.3 -m
+fsl5.0-bet $imageData ${subj}_brain -R -f 0.3 -m
 
 ##/path/NNU996_T2.nii.gz  /path/${subj}_brain 
 
 ##Bias correct
 
-PreprocessingScripts/N4 3 -i ${subj}_brain.nii.gz -x ${subj}_brain_mask.nii.gz -o ${subj}_brain.nii.gz -c [50x50x50,0.001] -s 2 -b [100,3] -t [0.15,0.01,200]
+./N4 3 -i ${subj}_brain.nii.gz -x ${subj}_brain_mask.nii.gz -o ${subj}_brain.nii.gz -c [50x50x50,0.001] -s 2 -b [100,3] -t [0.15,0.01,200]
 
 
 ##Rescale image
 
-PreprocessingScripts/rescale ${subj}_brain.nii.gz ${subj}_brain.nii.gz 0 1000 
+./rescale ${subj}_brain.nii.gz ${subj}_brain.nii.gz 0 1000 
 
 ##Registration
 
-PreprocessingScripts/cog ${subj}_brain.nii.gz PreprocessingScripts/templates/template-${age}.nii.gz ${subj}_template_to_T2.dof
-PreprocessingScripts/rreg  ${subj}_brain.nii.gz PreprocessingScripts/templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
-PreprocessingScripts/areg  ${subj}_brain.nii.gz PreprocessingScripts/templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
-PreprocessingScripts/nreg ${subj}_brain.nii.gz PreprocessingScripts/templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof -parin PreprocessingScripts/nreg_neonate.cnf
+./cog ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz ${subj}_template_to_T2.dof
+./rreg  ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
+./areg  ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
+./nreg ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof -parin ./nreg_neonate.cnf
 
 
-PreprocessingScripts/ffdcomposeN ${subj}_T2_to_template.dof -dofin_i ${subj}_template_to_T2.dof
+./ffdcomposeN ${subj}_T2_to_template.dof -dofin_i ${subj}_template_to_T2.dof
+
+cd $OLDPWD
 
 f1=$1
 filename=${f1##*/}
-result=`PreprocessingScripts/dofprint ${subj}_T2_to_template.dof |grep FFD`
+result=`./dofprint ${subj}_T2_to_template.dof |grep FFD`
 
 if [ "$result" == "" ];
 then 
