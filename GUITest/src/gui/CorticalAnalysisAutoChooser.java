@@ -290,7 +290,8 @@ public class CorticalAnalysisAutoChooser extends JApplet {
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c,
 								"File name to search : Specify the pattern of the name of the file to search, "
-										+ "in which * matches everything(so *T2.* will matches everything that contains \"T2.\" in the file name.");
+										+ "in which * matches everything(so *connectivity.* will matches everything that contains "
+										+ "\"connectivity.\" in the file name.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Switch View to Manual : In this view, images and the"
 								+ " corresponding age at scan can be manually selected.");

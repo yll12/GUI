@@ -257,6 +257,11 @@ public class GUIUtilities {
 	}
 
 	public static void populateInputs(Deque<Pair<String, String[]>> list, String inputData, String[] args, String scriptName) {
+		String[] cmdArray = createCmdArray(args, scriptName);
+		list.add(new Pair<String, String[]>(inputData, cmdArray));
+	}
+
+	public static String[] createCmdArray(String[] args, String scriptName) {
 		String script = "'cd ../ScriptsRunByGUI; " + scriptName;
 		for (int i = 0; i < args.length; i++) {
 			script += args[i];
@@ -267,7 +272,7 @@ public class GUIUtilities {
 			}
 		}
 		String[] cmdArray = { "gnome-terminal", "--disable-factory", "-e", "bash -c " + script };
-		list.add(new Pair<String, String[]>(inputData, cmdArray));
+		return cmdArray;
 	}
 
 	public static boolean isInputValid(final int x, String inputData) {
@@ -411,6 +416,30 @@ public class GUIUtilities {
 		return age;
 	}
 
+	/**
+	 * Removes from end of the line until T2 is found
+	 * 
+	 * @param inputData
+	 *            : Example : /staff/yl13/NNU996/NNU996_T2.nii.gz
+	 * @return /staff/yl13/NNU996/NNU996_
+	 */
+	public static String extractSubj(String inputData) {
+		return inputData.substring(0, inputData.lastIndexOf("T2"));
+	}
+
+	/**
+	 * @param inputData
+	 * @return True if and only if subject folder is same as filename
+	 * 
+	 *         Example: /staff/yl13/NNU996/NNU996_T2.nii.gz returns true
+	 *         /staff/yl13/NNU996/NNU123_T2.nii.gz returns false
+	 */
+	public static boolean isInputForT2Valid(String inputData) {
+		String subjectFolder = getFileName(getWorkingDirectory(inputData));
+		String fileName = getFileName(inputData);
+		return fileName.contains(subjectFolder);
+	}
+
 	public static void main(String[] args) throws IOException {
 		System.out.println("Testing utilities..");
 		String x = "/staff/yl13/Testing.zip";
@@ -441,6 +470,15 @@ public class GUIUtilities {
 		System.out.println(list);
 		hasFinished("NNU001_T2.nii.gz", "/staff/yl13/TestDataForT2/NNU001", "_success");
 		System.out.println(GUIUtilities.searchAllFile("/staff/yl13/TestDataForT2/NNU001", getFileName("NNU001_T2.nii.gz") + "_success"));
+		String testinputData = "/staff/yl13/FULLTEST/NNU996/connectivity.nii.gz";
+		System.out.println("Scan = " + getWorkingDirectory(testinputData));
+		System.out.println("Subj = " + getFileName(getWorkingDirectory(testinputData)));
+		System.out.println("Dir_path = " + getWorkingDirectory(getWorkingDirectory(testinputData)));
+		testinputData = "/staff/yl13/FULLTEST/NNU996/NNU996_T2.nii.gz";
+		System.out.println("Extract Subj for T2 = " + extractSubj(testinputData));
+		testCheckT2Input(testinputData);
+		testinputData = "/staff/yl13/FULLTEST/NNU996/NNU123_T2.nii.gz";
+		testCheckT2Input(testinputData);
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		String age = null;
 		while ((age = br.readLine()) != null) {
@@ -456,6 +494,14 @@ public class GUIUtilities {
 
 	}
 
+	private static void testCheckT2Input(String testinputData) {
+		if (isInputForT2Valid(testinputData)) {
+			System.out.println("Passed the test");
+		} else {
+			System.out.println("Failed the test");
+		}
+	}
+
 	private static void testMethod(String x) {
 		System.out.println("Input is: " + x);
 		System.out.println("Work directory is: " + getWorkingDirectory(x));
@@ -463,5 +509,4 @@ public class GUIUtilities {
 		System.out.println("Error file name is: " + getFileName(x) + "_error");
 		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
 	}
-
 }

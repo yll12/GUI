@@ -1,8 +1,8 @@
 #!/bin/bash
 
-## $1 :: Input Data
-## $2 :: Boolean (True if and only if bedpostx is ticked) 
-## $3 :: Input Directory
+## $1 :: Input Data ##e.g: /staff/yl13/TestData/NNU996/unreg-data.nii.gz
+## $2 :: Boolean (true if and only if bedpostx is ticked) 
+## $3 :: Input Directory ##e.g: /staff/yl13/TestData/NNU996
 ## $4 :: bvecs
 ## $5 :: bvals
 

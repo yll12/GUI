@@ -3,10 +3,10 @@
 #INPUT
 #need to define imageData, age
 
-imageData=$1
-subj=`fsl5.0-remove_ext $imageData`
+imageData=$1  ##NNU996_T2.nii.gz
+subj=`fsl5.0-remove_ext $imageData`  ##NNU996_T2
 age=$2
-subjdir=$3
+subjdir=$3   ##/staff/yl13/TestData/NNU996
 
 scriptsdir=`pwd`/../PreprocessingScripts
 

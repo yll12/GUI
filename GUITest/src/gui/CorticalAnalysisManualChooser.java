@@ -51,7 +51,7 @@ import utils.Triple;
 @SuppressWarnings("serial")
 public class CorticalAnalysisManualChooser extends JApplet {
 
-	private JCheckBox chckbxNotSureYet;
+	private JCheckBox chckbxDiffusionSpace;
 	private JTextField textField_inputCount;
 	private JTextField textField_numberOfConcurrentProcess;
 	private List<String> ageTextFields = new LinkedList<String>();
@@ -67,7 +67,7 @@ public class CorticalAnalysisManualChooser extends JApplet {
 	private final String helpToolTip = "Help";
 	private final String cancelToolTip = "Cancel";
 	private final String switchViewToolTip = "This view automatically allocates datas";
-	private final String boSpaceToolTip = "Enable this to run Something I'm not sure";
+	private final String diffusionSpaceToolTip = "Enable this to run Something I'm not sure";
 	private final String ageToolTip = "Specify age at scan(possible range are: 28 ~ 44)";
 	private final String templateAgeToolTip = "Specify template age(possible range are: 28 ~ 44)";
 	private final String processToolTip = "Specify the number of process to be run at the same time";
@@ -174,6 +174,14 @@ public class CorticalAnalysisManualChooser extends JApplet {
 
 				Deque<Pair<String, String[]>> listOfInputs = new LinkedList<Pair<String, String[]>>();
 				List<Thread> listOfObserverThreads = new LinkedList<Thread>();
+				String tempAge = textField_template_age.getText();
+				if (tempAge.trim().isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Must specify template age before proceeding");
+					return;
+				}
+				boolean chckboxIsSelected = chckbxDiffusionSpace.isSelected();
+				tempAge = GUIUtilities.checkAge(tempAge);
+				String dirPath = "";
 				for (int i = 0; i <= dataIndex; i++) {
 					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
 					String inputData = triple.getA().getText();
@@ -183,7 +191,29 @@ public class CorticalAnalysisManualChooser extends JApplet {
 
 						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
 
-						String[] args = { inputData, age, workingdir };
+						dirPath = GUIUtilities.getWorkingDirectory(workingdir);
+
+						String[] args =
+								{ tempAge, dirPath, workingdir, GUIUtilities.getFileName(workingdir), age, inputData,
+										String.valueOf(chckboxIsSelected) };
+
+						if (chckboxIsSelected) {
+							if (GUIUtilities.searchAllFile(workingdir, "nodif_brain.nii.gz").isEmpty()) {
+								final int x = i;
+								Thread t = new Thread(new Runnable() {
+
+									@Override
+									public void run() {
+										JOptionPane.showMessageDialog(null, "Input data " + (x + 1) + " has not completed"
+												+ " Diffusion Pre-processing, please run it before running Diffusion Space or uncheck the box to"
+												+ " skip this process");
+									}
+
+								});
+								t.start();
+								continue;
+							}
+						}
 
 						GUIUtilities.populateInputs(listOfInputs, inputData, args, "./cortical_analysis_part1.sh ");
 
@@ -219,7 +249,24 @@ public class CorticalAnalysisManualChooser extends JApplet {
 					}
 				} while (!isObserversDead(listOfObserverThreads));
 
-				if (chckbxNotSureYet.isSelected()) {
+				if (dirPath != "") {
+					String[] args = { tempAge, dirPath };
+					String[] cmdArray = GUIUtilities.createCmdArray(args, "./cortical_analysis_part2.sh ");
+					Thread t = GUIUtilities.createExecutingThread(cmdArray);
+					t.start();
+					while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
+						if (GUIUtilities.hasFinished(dirPath, dirPath, "_error") || GUIUtilities.hasFinished(dirPath, dirPath, "_success")) {
+							break;
+						}
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+
+				if (chckboxIsSelected) {
 
 					/*
 					 * for (Pair<String, String[]> pair :
@@ -234,6 +281,7 @@ public class CorticalAnalysisManualChooser extends JApplet {
 					 * "_success")) { break; } try { Thread.sleep(1000); } catch
 					 * (InterruptedException e1) { e1.printStackTrace(); } } }
 					 */
+
 				}
 
 			}
@@ -311,28 +359,26 @@ public class CorticalAnalysisManualChooser extends JApplet {
 								+ " Specify the number either using the text field or the slider and click Go. ");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c,
-								"Input data : Specify the full path to the image file either by typing it or using the Open button");
+								"Input data : Specify the full path to the image file either by typing it or using the Open button.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c,
 								"Age at scan : Specify the age at scan corresponding to the image file in the text field or using the slider.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "Parcellation and segmentation : Check this box to allow parcellation"
-								+ " and segmentation for all image files");
+						GUIUtilities.createLine(lineNumber, content, c, "TODO checkBox : . . .");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Number of Concurrent Process : Specify the number of process to be run "
-								+ "at any given time(default as 4)");
+								+ "at any given time(default as 4).");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c,
 								"Switch View to Auto : A convenient way to find all the image data by specifying "
-										+ "the parent folder of all the image files");
-						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities
-								.createLine(lineNumber, content, c, "Clear : Clear all input data text fields and reset all ages to 36 (default)");
-						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "Go : Starts the T2-preprocessing");
+										+ "the parent folder of all the image files.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c,
-								"Run Segmentation Only : Starts the segmentation process(Only run this if T2-preprocessing is finished).");
+								"Clear : Clear all input data text fields and reset all ages to 36 (default).");
+						GUIUtilities.createLine(lineNumber, content, c, " ");
+						GUIUtilities.createLine(lineNumber, content, c, "Template_age : Specify the age for the template. ");
+						GUIUtilities.createLine(lineNumber, content, c, " ");
+						GUIUtilities.createLine(lineNumber, content, c, "Go : Starts the cortical analysis process");
 					}
 				};
 				applet.init();
@@ -340,16 +386,16 @@ public class CorticalAnalysisManualChooser extends JApplet {
 				frame.setBounds(getX(), getY(), 50 + (int) frame.getPreferredSize().getWidth(), 50 + (int) frame.getPreferredSize().getHeight());
 				frame.setLocationRelativeTo(null);
 				frame.setVisible(true);
-				frame.setTitle("T2 Pre-processing Help");
+				frame.setTitle("Cortical Analysis(Manual) Help");
 
 				frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			}
 		});
 
-		chckbxNotSureYet = new JCheckBox("Not Sure Yet");
-		chckbxNotSureYet.setBounds(6, 95 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 260, 50);
-		getContentPane().add(chckbxNotSureYet);
-		chckbxNotSureYet.setToolTipText(boSpaceToolTip);
+		chckbxDiffusionSpace = new JCheckBox("Diffusion Space");
+		chckbxDiffusionSpace.setBounds(6, 95 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 260, 50);
+		getContentPane().add(chckbxDiffusionSpace);
+		chckbxDiffusionSpace.setToolTipText(diffusionSpaceToolTip);
 
 		JLabel lblTemplateAge = new JLabel("Template_age");
 		lblTemplateAge.setBounds(8, 175 + 2 * GUIUtilities.increaseByHeight(dataIndex, heightDifference), 100, 15);

@@ -16,12 +16,22 @@ scan=$3           ##/staff/yl13/TestDataForT2/ABC1000
 subj=$4           ##ABC1000
 age=$5            ##40
 
+checkForError ()
+{
+if [ $? != 0 ] || [ $NoError == "false" ]
+then
+	echo "Process Unsuccessful(error occurred)"
+	NoError=false
+fi
+}
+
+NoError=true
+
 OLDPWD=$(pwd)
 cd ../PreprocessingScripts
 
 #check where these are made
 mkdir -p ${dir_path}/cortical_analysis/maps ${dir_path}/cortical_analysis/stats  
-
 
 #compose registrations to target age
 #is age odd or even
@@ -114,40 +124,62 @@ else
         done
 
     fi
-
 fi
 
 ./ffdcomposeN ${scan}/${subj}_final_template_to_T2.dof -dofin ${scan}/${subj}_template_to_T2.dof `echo $dofs`
+checkForError
 
 fsl5.0-fslmaths ${scan}/segmentations/${subj}_T2_tissue_labels -thr 2 -uthr 2 -bin ${scan}/segmentations/${subj}_cortex
-./transformation ${scan}/segmentations/${subj}_cortex.nii.gz ${dir_path}/cortical_analysis/maps/tmp_${subj}_cortex_map.nii.gz -dofin ${scan}/${subj}_final_template_to_T2.dof -target ./templates/template-${temp_age}.nii.gz -invert  >/dev/null 2>&1
+./transformation ${scan}/segmentations/${subj}_cortex.nii.gz ${dir_path}/cortical_analysis/maps/tmp_${subj}_cortex_map.nii.gz -dofin ${scan}/${subj}_final_template_to_T2.dof -target ./templates/template-${temp_age}.nii.gz -invert 
 fsl5.0-fslmaths ${dir_path}/cortical_analysis/maps/tmp_${subj}_cortex_map.nii.gz -s 1 ${dir_path}/cortical_analysis/maps/${subj}_cortex_map.nii.gz -odt float
+checkForError
 
 
-./transformation $INPUT ${dir_path}/cortical_analysis/maps/${subj}_data_transformed -dofin ${scan}/${subj}_final_template_to_T2.dof -target ./templates/template-${temp_age}.nii.gz -invert >/dev/null 2>&1
+checkForError
+
+f1=$6
+filename=${f1##*/}
+
+if $NoError
+then
+	echo "Process Successful"
+	echo "Success" > $3/$filename"_success"
+	echo "Exit terminal in . . ."
+	x=10
+	while [ $x -ge 0 ]
+		do 
+			sleep 1
+			echo $x
+			x=$((x - 1))
+		done 
+	exit 0
+else
+	echo "Error" > $3/$filename"_error"
+	read
+fi
 
 #IF input image is in diffusion space
 #PERFORM B0 to T2 registration
-#fslroi data B0 01
-#bet?
-#cog
-#rreg
-#areg
-#nreg T2 to B0
-#ffdcomposeN invert with template registration
 
-#transformation $INPUT etc etc
+if $7; then
 
-#FI
+./cog ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  ${scan}/${subj}_T2_to_B0.dof    
+./rreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
+./areg  ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
+./nreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof -parin ./nreg_neonate.cnf
 
-#END LOOP
+./ffdcomposeN ${scan}/${subj}_B0_to_T2.dof -dofin_i ${scan}/${subj}_T2_to_B0.dof
+./ffdcomposeN ${scan}/${subj}_final_template_to_B0.dof -dofin ${scan}/${subj}_T2_to_B0.dof -dofin ${scan}/${subj}_final_template_to_T2.dof
+
+./transformation $6 ${dir_path}/cortical_analysis/maps/${subj}_data_transformed.nii.gz -dofin ${scan}/${subj}_final_template_to_B0.dof -target ./templates/template-${temp_age}.nii.gz -invert
+
+else
+
+./transformation $6 ${dir_path}/cortical_analysis/maps/${subj}_data_transformed.nii.gz -dofin ${scan}/${subj}_final_template_to_T2.dof -target ./templates/template-${temp_age}.nii.gz -invert 
+
+fi
 
 cd $OLDPWD
-
-#START LOOP
-#tbss_skeleton -i stats/mean_cortex -p 0 stats/mean_cortex_distance stats/search_mask maps/${scan}_cortex_map maps/${INPUT}_skeletonised -a maps/$INPUT_transformed
-#END LOOP
-#fsl5.0-fslmerge -t stats/all_$INPUT maps/$INPUT_transformed
 
 exit 0
 ##CHECK CORTICAL SKELETON EDIT IF NECESSARY##

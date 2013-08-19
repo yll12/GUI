@@ -3,8 +3,8 @@
 #INPUT
 #need to define imageData, age
 
-imageData=$1
-subj=`fsl5.0-remove_ext $imageData`
+imageData=$1  ##NNU996_T2.nii.gz
+subj=`fsl5.0-remove_ext $imageData`  ##NNU996_T2
 age=$2
 subjdir=$3
 
@@ -200,7 +200,7 @@ $scriptsdir/ems_neonatal ${subj}_brain.nii.gz 87 $structs segmentations/"$subj"_
 
 echo "postprocessing labels for $subj"
 
-fslmaths segmentations/"$subj"_all_labels.nii.gz -uthr 82 segmentations/"$subj"_labels.nii.gz
+fsl5.0-fslmaths segmentations/"$subj"_all_labels.nii.gz -uthr 82 segmentations/"$subj"_labels.nii.gz
 
 $scriptsdir/padding segmentations/"$subj"_labels.nii.gz segmentations/"$subj"_all_labels.nii.gz segmentations/"$subj"_labels.nii.gz 86 42
 $scriptsdir/padding segmentations/"$subj"_labels.nii.gz segmentations/"$subj"_all_labels.nii.gz segmentations/"$subj"_labels.nii.gz 87 43

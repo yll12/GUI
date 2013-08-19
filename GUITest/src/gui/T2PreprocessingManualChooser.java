@@ -97,10 +97,10 @@ public class T2PreprocessingManualChooser extends JApplet {
 	public T2PreprocessingManualChooser(int dataIndex, List<String> inputTextFields, String ageTextFileLocation) {
 		T2PreprocessingManualChooser.dataIndex = dataIndex;
 		this.inputTextFields = inputTextFields;
+		GUIUtilities.rearrangeList(inputTextFields);
 		if (!ageTextFileLocation.equals("NotSpecified")) {
 			populateAgeList(ageTextFields, ageTextFileLocation);
 		}
-		GUIUtilities.rearrangeList(inputTextFields);
 	}
 
 	private void populateAgeList(List<String> ageList, String ageTextFileLocation) {
@@ -173,6 +173,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 				Deque<Pair<String, String[]>> listOfInputsForT2 = new LinkedList<Pair<String, String[]>>();
 				Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
 				List<Thread> listOfObserverThreads = new LinkedList<Thread>();
+				boolean allInputisValid = true;
 				for (int i = 0; i <= dataIndex; i++) {
 					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
 					String inputData = triple.getA().getText();
@@ -181,8 +182,28 @@ public class T2PreprocessingManualChooser extends JApplet {
 					if (GUIUtilities.isInputValid(i, inputData)) {
 
 						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
-						
-						String[] args = { inputData, age, workingdir };
+
+						if (!GUIUtilities.isInputForT2Valid(inputData)) {
+							allInputisValid = false;
+							final int x = i;
+							final String input = inputData;
+							final String directory = workingdir;
+							Thread t = new Thread(new Runnable() {
+
+								@Override
+								public void run() {
+									JOptionPane.showMessageDialog(null,
+											"The file name of input image " + (x + 1) + " must starts with the name of the subject folder. Please "
+													+ "rename \"" + GUIUtilities.getFileName(input) + "\" to a file name starting with \""
+													+ GUIUtilities.getFileName(directory) + "\".");
+								}
+
+							});
+							t.start();
+							continue;
+						}
+
+						String[] args = { inputData, age, workingdir, GUIUtilities.extractSubj(inputData) };
 
 						GUIUtilities.populateInputs(listOfInputsForT2, inputData, args, "./T2PreprocessingScripts.sh ");
 
@@ -197,6 +218,10 @@ public class T2PreprocessingManualChooser extends JApplet {
 					}
 				}
 				
+				if (!allInputisValid) {
+					return;
+				}
+
 				int numberOfConcurrentProcess =
 						GUIUtilities.getNumberOfConcurrentProcess(listOfInputsForT2.size(), preferredNumberOfConcurrentProcess);
 				for (int i = 0; i < numberOfConcurrentProcess; i++) {
@@ -395,7 +420,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 				frame.setBounds(getX(), getY(), 50 + (int) frame.getPreferredSize().getWidth(), 50 + (int) frame.getPreferredSize().getHeight());
 				frame.setLocationRelativeTo(null);
 				frame.setVisible(true);
-				frame.setTitle("T2 Pre-processing Help");
+				frame.setTitle("T2 Pre-processing(Manual) Help");
 
 				frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			}

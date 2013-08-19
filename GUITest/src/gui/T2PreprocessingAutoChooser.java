@@ -262,7 +262,8 @@ public class T2PreprocessingAutoChooser extends JApplet {
 						GridBagConstraints c = new GridBagConstraints();
 						GUIUtilities.initializeConstraints(c);
 						MutableInteger lineNumber = new MutableInteger(0);
-						GUIUtilities.createLine(lineNumber, content, c, "Input directory : Specify the parent folder of all the image files to be processed.");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"Input directory : Specify the parent folder of all the image files to be processed.");
 						GUIUtilities.createLine(lineNumber, content, c,
 								"       Example : image to process are : 1) /staff/yl13/Testing/NNU123/NNU123_T2.nii.gz");
 						GUIUtilities.createLine(lineNumber, content, c, "                              "
@@ -271,8 +272,9 @@ public class T2PreprocessingAutoChooser extends JApplet {
 								+ "                              3) /staff/yl13/Testing/NNU789/NNU789_T2.nii.gz");
 						GUIUtilities.createLine(lineNumber, content, c, "                              "
 								+ "                              4) /staff/yl13/Testing/NNU1000/NNU1000_T2.nii.gz");
-						GUIUtilities.createLine(lineNumber, content, c, "       Specifying /staff/yl13/Testing in input directory will search for these files"
-								+ " and populates them at manual view.");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"       Specifying /staff/yl13/Testing in input directory will search for these files"
+										+ " and populates them at manual view.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Age file : Specify any text file that contains the age information.");
 						GUIUtilities.createLine(lineNumber, content, c, "       Example : Using the above example, specify a text file, such as "
@@ -282,17 +284,20 @@ public class T2PreprocessingAutoChooser extends JApplet {
 						GUIUtilities.createLine(lineNumber, content, c, "                       44");
 						GUIUtilities.createLine(lineNumber, content, c, "                       37");
 						GUIUtilities.createLine(lineNumber, content, c, "       in which every new line corresponding to the age at scan.");
-						GUIUtilities.createLine(lineNumber, content, c, "       Emptying this field will default all age to 36 at manual view, which can be "
-								+ "further modified manually at the manual view.");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"       Emptying this field will default all age to 36 at manual view, which can be "
+										+ "further modified manually at the manual view.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "File name to search : Specify the pattern of the name of the file to search, "
-								+ "in which * matches everything(so *T2.* will matches everything that contains \"T2.\" in the file name.");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"File name to search : Specify the pattern of the name of the file to search, "
+										+ "in which * matches everything(so *T2.* will matches everything that contains \"T2.\" in the file name.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Switch View to Manual : In this view, images and the"
 								+ " corresponding age at scan can be manually selected.");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "Next : Proceed to the manual view, which populates all the input image files "
-								+ "and age at scan for a final check before processing.");
+						GUIUtilities.createLine(lineNumber, content, c,
+								"Next : Proceed to the manual view, which populates all the input image files "
+										+ "and age at scan for a final check before processing.");
 					}
 				};
 				applet.init();

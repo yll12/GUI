@@ -1,12 +1,12 @@
 #! /bin/bash
 
 imageData=$1  ##/staff/yl13/TestData/NNU996/NNU996_T2.nii.gz
-subj=`fsl5.0-remove_ext $imageData`
 age=$2
+subj=$4       ##/staff/yl13/TestData/NNU996/NNU996_
 
 cd ../PreprocessingScripts
 
-cp $imageData ${subj}_original
+cp $imageData ${subj}original.nii.gz
 
 ##Convert image to float
 
@@ -18,32 +18,32 @@ cp $imageData ${subj}_original
 
 ##brain extract
 
-fsl5.0-bet $imageData ${subj}_brain -R -f 0.3 -m
+fsl5.0-bet $imageData ${subj}brain -R -f 0.3 -m
 
-##/path/NNU996_T2.nii.gz  /path/${subj}_brain 
+##/path/NNU996_T2.nii.gz  /path/${subj}brain 
 
 ##Bias correct
 
-./N4 3 -i ${subj}_brain.nii.gz -x ${subj}_brain_mask.nii.gz -o ${subj}_brain.nii.gz -c [50x50x50,0.001] -s 2 -b [100,3] -t [0.15,0.01,200]
+./N4 3 -i ${subj}brain.nii.gz -x ${subj}brain_mask.nii.gz -o ${subj}brain.nii.gz -c [50x50x50,0.001] -s 2 -b [100,3] -t [0.15,0.01,200]
 
 
 ##Rescale image
 
-./rescale ${subj}_brain.nii.gz ${subj}_brain.nii.gz 0 1000 
+./rescale ${subj}brain.nii.gz ${subj}brain.nii.gz 0 1000 
 
 ##Registration
 
-./cog ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz ${subj}_template_to_T2.dof
-./rreg  ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
-./areg  ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof
-./nreg ${subj}_brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}_template_to_T2.dof -dofout ${subj}_template_to_T2.dof -parin ./nreg_neonate.cnf
+./cog ${subj}brain.nii.gz ./templates/template-${age}.nii.gz ${subj}template_to_T2.dof
+./rreg  ${subj}brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}template_to_T2.dof -dofout ${subj}template_to_T2.dof
+./areg  ${subj}brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}template_to_T2.dof -dofout ${subj}template_to_T2.dof
+./nreg ${subj}brain.nii.gz ./templates/template-${age}.nii.gz -dofin ${subj}template_to_T2.dof -dofout ${subj}template_to_T2.dof -parin ./nreg_neonate.cnf
 
 
-./ffdcomposeN ${subj}_T2_to_template.dof -dofin_i ${subj}_template_to_T2.dof
+./ffdcomposeN ${subj}T2_to_template.dof -dofin_i ${subj}template_to_T2.dof
 
 f1=$1
 filename=${f1##*/}
-result=`./dofprint ${subj}_T2_to_template.dof |grep FFD`
+result=`./dofprint ${subj}T2_to_template.dof |grep FFD`
 
 if [ "$result" == "" ];
 then 
