@@ -16,17 +16,43 @@ fi
 }
 NoError=true
 cd ../PreprocessingScripts
-./eddy_correct_neonate2 $1 $3/data.nii.gz 0 
-error
-./fdt_rotate_bvecs $3/$4 $3/rotated_bvecs $3/data.ecclog
-error
-fsl5.0-fslroi $3/data.nii.gz $3/nodif 0 1 
-error
-fsl5.0-bet $3/nodif.nii.gz $3/nodif_brain -f 0.3 -m 
-error
-fsl5.0-dtifit -k $3/data.nii.gz -o $3/dti -r $3/rotated_bvecs -b $3/$5 -m $3/nodif_brain_mask
-error
+
+cp $3/$4 $3/bvecs_original
+
+if $6; 
+then
+	./eddy_correct_neonate2 $1 $3/data.nii.gz 0 
+	error
+	./fdt_rotate_bvecs $3/$4 $3/rotated_bvecs $3/data.ecclog
+	error
+	fsl5.0-fslroi $3/data.nii.gz $3/nodif 0 1 
+	error
+	fsl5.0-bet $3/nodif.nii.gz $3/nodif_brain -f 0.3 -m 
+	error
+	fsl5.0-dtifit -k $3/data.nii.gz -o $3/dti -r $3/rotated_bvecs -b $3/$5 -m $3/nodif_brain_mask
+	error
+else
+	fsl5.0-fslroi $3/data.nii.gz $3/nodif 0 1 
+	error
+	fsl5.0-bet $3/nodif.nii.gz $3/nodif_brain -f 0.3 -m 
+	error
+	fsl5.0-dtifit -k $3/data.nii.gz -o $3/dti -r $3/$4 -b $3/$5 -m $3/nodif_brain_mask
+	error
+fi
+
+
 if $2; then
+	
+	if $6 ; then 
+		cp $3/rotated_bvecs $3/bvecs
+	elif [ ! $4 == bvecs  ]; then
+		cp $3/$4 $3/bvecs
+	fi
+	
+	if [ ! $5 == bvals  ]; then
+		cp $3/$5 $3/bvals
+	fi
+
 
 	fsl5.0-bedpostx $3
 

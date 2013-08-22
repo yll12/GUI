@@ -1,8 +1,16 @@
 #! /bin/bash
 
-imageData=$1  ##/staff/yl13/TestData/NNU996/NNU996_T2.nii.gz
+imageData=$1  ##/staff/yl13/TestData/NNU996/JIJFIJADFIT2llohk.nii.gz
 age=$2
-subj=$4       ##/staff/yl13/TestData/NNU996/NNU996_
+fullpath=$3   ##/staff/yl13/TestData/NNU996
+subID=$4      ##NNU996
+
+if [ ! ${fullpath}/${subID}_T2.nii.gz == $1 ]; then
+	cp $imageData ${fullpath}/${subID}_T2.nii.gz
+	imageData=${fullpath}/${subID}_T2.nii.gz
+fi
+
+subj=${fullpath}/${subID}       ##/staff/yl13/TestData/NNU996/NNU996
 
 cd ../PreprocessingScripts
 
@@ -25,7 +33,6 @@ fsl5.0-bet $imageData ${subj}brain -R -f 0.3 -m
 ##Bias correct
 
 ./N4 3 -i ${subj}brain.nii.gz -x ${subj}brain_mask.nii.gz -o ${subj}brain.nii.gz -c [50x50x50,0.001] -s 2 -b [100,3] -t [0.15,0.01,200]
-
 
 ##Rescale image
 

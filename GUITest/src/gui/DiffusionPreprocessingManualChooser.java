@@ -51,6 +51,7 @@ import utils.Triple;
 @SuppressWarnings("serial")
 public class DiffusionPreprocessingManualChooser extends JApplet {
 	private JCheckBox chckbxBedpostx;
+	private JCheckBox chckbxEddyCorrect;
 	private JTextField textField_numberOfDatasets;
 	private static int dataIndex;
 	private final static int heightDifference = 30;
@@ -71,6 +72,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 	private final String cancelToolTip = "Cancel";
 	private final String switchViewToolTip = "This view automatically allocates datas";
 	private final String bedpostxToolTip = "Enable this to run bedpostx process";
+	private final String eddyCorrectToolTip = "Enable this to run eddy_correct process";
 	private final String processToolTip = "Specify the number of process to be run at the same time";
 
 	/**
@@ -112,23 +114,29 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 		chckbxBedpostx.setBounds(6, 76 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 80, 18);
 		chckbxBedpostx.setToolTipText(bedpostxToolTip);
 		getContentPane().add(chckbxBedpostx);
-
+		
+		chckbxEddyCorrect = new JCheckBox("Eddy_correct");
+		chckbxEddyCorrect.setBounds(6, 106 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 150, 18);
+		chckbxEddyCorrect.setToolTipText(eddyCorrectToolTip);
+		getContentPane().add(chckbxEddyCorrect);
+		
 		JLabel lblNumberOfConcurrentProcess = new JLabel("Number of Concurrent Process");
-		lblNumberOfConcurrentProcess.setBounds(8, 100 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 200, 25);
+		lblNumberOfConcurrentProcess.setBounds(8, 130 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 200, 25);
 		lblNumberOfConcurrentProcess.setToolTipText(processToolTip);
 		getContentPane().add(lblNumberOfConcurrentProcess);
 
 		textField_numberOfConcurrentProcess = new JTextField();
 		textField_numberOfConcurrentProcess.setColumns(5);
-		textField_numberOfConcurrentProcess.setBounds(206, 100 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 40, 27);
+		textField_numberOfConcurrentProcess.setBounds(206, 130 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 40, 27);
 		textField_numberOfConcurrentProcess.setText("4");
 		textField_numberOfConcurrentProcess.setToolTipText(processToolTip);
 		getContentPane().add(textField_numberOfConcurrentProcess);
 
 		JButton btnStartProcess = new JButton("Go");
-		btnStartProcess.setBounds(364, 133 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 45, 27);
+		btnStartProcess.setBounds(364, 163 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 45, 27);
 		btnStartProcess.setToolTipText(go2ToolTip);
 		btnStartProcess.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent arg0) {
 
 				int preferredNumberOfConcurrentProcess;
@@ -208,9 +216,11 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 
 				try {
 					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
-					String bvecs = getTextFile(workingdir, "bvecs");
+					String bvecs = getTextFile(workingdir, "bvec");
 					String bval = getTextFile(workingdir, "bval");
-					String[] args = { inputData, String.valueOf(chckbxBedpostx.isSelected()), workingdir, bvecs, bval };
+					String[] args =
+							{ inputData, String.valueOf(chckbxBedpostx.isSelected()), workingdir, bvecs, bval,
+									String.valueOf(chckbxEddyCorrect.isSelected()) };
 
 					String script = "'cd ../ScriptsRunByGUI; " + "./DiffusionPreprocessingScripts.sh ";
 					for (int i = 0; i < args.length; i++) {
@@ -268,7 +278,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 		getContentPane().add(btnStartProcess);
 
 		JButton btnCancel = new JButton("Cancel");
-		btnCancel.setBounds(420, 133 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 70, 27);
+		btnCancel.setBounds(420, 163 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 70, 27);
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				System.exit(0);
@@ -279,7 +289,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 		getContentPane().add(btnCancel);
 
 		JButton btnClear = new JButton("Clear");
-		btnClear.setBounds(286, 134 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 66, 25);
+		btnClear.setBounds(286, 164 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 66, 25);
 		getContentPane().add(btnClear);
 		btnClear.setToolTipText(clearToolTip);
 		btnClear.addActionListener(new ActionListener() {
@@ -294,7 +304,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 		});
 
 		JButton btnHelp = new JButton("Help");
-		btnHelp.setBounds(206, 134 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 66, 25);
+		btnHelp.setBounds(206, 164 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 66, 25);
 		getContentPane().add(btnHelp);
 		btnHelp.setToolTipText(helpToolTip);
 		btnHelp.addActionListener(new ActionListener() {
@@ -344,7 +354,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 			}
 		});
 		JButton btnSwitch = new JButton("Switch View to Auto");
-		btnSwitch.setBounds(6, 134 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 150, 25);
+		btnSwitch.setBounds(6, 164 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 150, 25);
 		getContentPane().add(btnSwitch);
 		btnSwitch.setToolTipText(switchViewToolTip);
 		btnSwitch.addActionListener(new ActionListener() {
@@ -488,7 +498,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 			public void actionPerformed(ActionEvent e) {
 				dataIndex = Integer.parseInt(textField_numberOfDatasets.getText()) - 1;
 
-				f.setSize(510, 196 + GUIUtilities.increaseByHeight(dataIndex, heightDifference));
+				f.setSize(510, 226 + GUIUtilities.increaseByHeight(dataIndex, heightDifference));
 				for (int i = 0; i < inputs.size(); i++) {
 					String inputText = inputs.get(i).getB().getText();
 					if (i < textFields.size()) {
@@ -581,7 +591,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 		applet.init();
 
 		f.setContentPane(applet.getContentPane());
-		f.setBounds(400, 100, 510, 196 + (dataIndex <= 9 ? (dataIndex * heightDifference) : (9 * heightDifference)));
+		f.setBounds(400, 100, 510, 226 + (dataIndex <= 9 ? (dataIndex * heightDifference) : (9 * heightDifference)));
 		f.setTitle("Diffusion Pre-processing(Manual)");
 		f.setVisible(true);
 

@@ -266,24 +266,6 @@ public class CorticalAnalysisManualChooser extends JApplet {
 					}
 				}
 
-				if (chckboxIsSelected) {
-
-					/*
-					 * for (Pair<String, String[]> pair :
-					 * listOfInputsForSegmentation) { String[] cmdArray =
-					 * pair.getB(); String inputData = pair.getA(); Thread t =
-					 * GUIUtilities.createExecutingThread(cmdArray); t.start();
-					 * String workdir =
-					 * GUIUtilities.getWorkingDirectory(inputData); while
-					 * (t.isAlive() || t.getState() != Thread.State.TERMINATED)
-					 * { if (GUIUtilities.hasFinished(inputData, workdir,
-					 * "_error") || GUIUtilities.hasFinished(inputData, workdir,
-					 * "_success")) { break; } try { Thread.sleep(1000); } catch
-					 * (InterruptedException e1) { e1.printStackTrace(); } } }
-					 */
-
-				}
-
 			}
 
 			private <T> boolean isObserversDead(List<T> list) {
