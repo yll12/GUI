@@ -67,7 +67,7 @@ public class CorticalAnalysisManualChooser extends JApplet {
 	private final String helpToolTip = "Help";
 	private final String cancelToolTip = "Cancel";
 	private final String switchViewToolTip = "This view automatically allocates datas";
-	private final String diffusionSpaceToolTip = "Enable this to run Something I'm not sure";
+	private final String diffusionSpaceToolTip = "Enable this to run Diffusion Space";
 	private final String ageToolTip = "Specify age at scan(possible range are: 28 ~ 44)";
 	private final String templateAgeToolTip = "Specify template age(possible range are: 28 ~ 44)";
 	private final String processToolTip = "Specify the number of process to be run at the same time";

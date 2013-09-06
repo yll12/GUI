@@ -40,7 +40,7 @@ public class Main extends JApplet {
 		getContentPane().setLayout(gridBagLayout);
 
 		JButton btnDiffusionPreprocessing = new JButton(
-				"Diffusion Preprocessing");
+				"Diffusion Pre-processing");
 		btnDiffusionPreprocessing.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {

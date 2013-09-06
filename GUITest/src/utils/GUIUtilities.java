@@ -1,12 +1,14 @@
 package utils;
 
 import java.awt.Container;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -18,8 +20,12 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import sun.java2d.xr.MutableInteger;
@@ -479,6 +485,10 @@ public class GUIUtilities {
 		testCheckT2Input(testinputData);
 		testinputData = "/staff/yl13/FULLTEST/NNU996/NNU123_T2.nii.gz";
 		testCheckT2Input(testinputData);
+		List<String> emptyList = new LinkedList<String>();
+		for (String string : emptyList) {
+			System.out.println(string);
+		}
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		String age = null;
 		while ((age = br.readLine()) != null) {
@@ -509,4 +519,61 @@ public class GUIUtilities {
 		System.out.println("Error file name is: " + getFileName(x) + "_error");
 		System.out.println(checkInput(x, ".zip") ? "Contains the extension" : "Does not contains the extension");
 	}
+
+	public static String askUserForText(List<String> possibleFiles, int i, String filename) {
+		String result = null;
+
+		if (EventQueue.isDispatchThread()) {
+
+			JPanel panel = new JPanel();
+			panel.add(new JLabel("Please make a selection for " + filename + ":"));
+			DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>();
+			for (String value : possibleFiles) {
+				model.addElement(value);
+			}
+			JComboBox<String> comboBox = new JComboBox<String>(model);
+			panel.add(comboBox);
+
+			JOptionPane.showConfirmDialog(null, panel, "Multiple occurrence of " + filename + " for input " + (i + 1), JOptionPane.PLAIN_MESSAGE,
+					JOptionPane.QUESTION_MESSAGE);
+			result = (String) comboBox.getSelectedItem();
+
+		} else {
+
+			Response response = new Response(possibleFiles, i, filename);
+			try {
+				SwingUtilities.invokeAndWait(response);
+				result = response.getResponse();
+			} catch (InterruptedException | InvocationTargetException ex) {
+				ex.printStackTrace();
+			}
+
+		}
+		return result;
+	}
+
+	public static class Response implements Runnable {
+
+		private List<String> values;
+		private String response;
+		private int i;
+		private String filename;
+
+		public Response(List<String> possibleFiles, int i, String filename) {
+			this.values = possibleFiles;
+			this.i = i;
+			this.filename = filename;
+		}
+
+		@Override
+		public void run() {
+			response = askUserForText(values, i, filename);
+		}
+
+		public String getResponse() {
+			return response;
+		}
+
+	}
+
 }

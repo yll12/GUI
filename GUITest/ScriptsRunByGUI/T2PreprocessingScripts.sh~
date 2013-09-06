@@ -2,31 +2,38 @@
 
 imageData=$1  ##/staff/yl13/TestData/NNU996/JIJFIJADFIT2llohk.nii.gz
 age=$2
-fullpath=$4   ##/staff/yl13/TestData/NNU996
-subID=$5      ##NNU996
+fullpath=$3   ##/staff/yl13/TestData/NNU996
+subID=$4      ##NNU996
+subj=${fullpath}/${subID}_       ##/staff/yl13/TestData/NNU996/NNU996_
 
-if [ ! ${fullpath}/${subID}_T2.nii.gz == $1 ]; then
-	cp $imageData ${fullpath}/${subID}_T2.nii.gz
-	imageData=${fullpath}/${subID}_T2.nii.gz
+if [ ! ${subj}T2.nii.gz == $1 ]; then
+	cp $imageData ${subj}T2.nii.gz
+	imageData=${subj}T2.nii.gz
 fi
 
-subj=${fullpath}/${subID}       ##/staff/yl13/TestData/NNU996/NNU996
 
 cd ../PreprocessingScripts
 
-cp $imageData ${subj}original.nii.gz
+
+if [ ! ${subj}original.nii.gz == $imageData ]; then
+	cp $imageData ${subj}original.nii.gz
+fi
+
+if [ ! ${subj}T2.nii.gz == $1 ]; then
+	cp $imageData ${subj}T2.nii.gz
+fi
 
 ##Convert image to float
 
-./convert $imageData $imageData -float
+./convert ${subj}T2.nii.gz ${subj}T2.nii.gz -float
 
 ##Rescale image
 
-./rescale $imageData $imageData 0 1000 
+./rescale ${subj}T2.nii.gz ${subj}T2.nii.gz 0 1000 
 
 ##brain extract
 
-fsl5.0-bet $imageData ${subj}brain -R -f 0.3 -m
+fsl5.0-bet ${subj}T2.nii.gz ${subj}brain -R -f 0.3 -m
 
 ##/path/NNU996_T2.nii.gz  /path/${subj}brain 
 

@@ -41,7 +41,6 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import utils.DoubleOccurrenceException;
 import utils.GUIUtilities;
 import utils.NoSuchFileException;
 import utils.Triple;
@@ -54,8 +53,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 	private int dataIndex;
 	private final int heightDifference = 30;
 	private static JFrame f;
-	private final List<Triple<JLabel, JTextField, JButton>> inputs =
-			new LinkedList<Triple<JLabel, JTextField, JButton>>();
+	private final List<Triple<JLabel, JTextField, JButton>> inputs = new LinkedList<Triple<JLabel, JTextField, JButton>>();
 	private static JApplet applet;
 	private JPanel panel;
 
@@ -74,19 +72,16 @@ public class DiffusionPreprocessingExtension extends JApplet {
 	public void init() {
 		GUIUtilities.initLookAndFeel("Nimbus");
 		panel = new JPanel();
-		getContentPane().setPreferredSize(
-				new Dimension((int) (Math.random() * 2), 2));
+		getContentPane().setPreferredSize(new Dimension((int) (Math.random() * 2), 2));
 		getContentPane().setLayout(null);
 		getContentPane().setBackground(panel.getBackground());
 
 		panel.setLayout(null);
-		panel.setPreferredSize(new Dimension(510, (dataIndex + 1)
-				* heightDifference));
+		panel.setPreferredSize(new Dimension(510, (dataIndex + 1) * heightDifference));
 		initInputDirectory(dataIndex);
 		if (dataIndex > 9) {
 			JScrollPane scrollPane = new JScrollPane(panel);
-			scrollPane
-					.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+			scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 			scrollPane.setBounds(6, 37, 500, 305);
 			scrollPane.setAutoscrolls(true);
 			scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -97,46 +92,33 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		}
 
 		chckbxBedpostx = new JCheckBox("Bedpostx");
-		chckbxBedpostx
-				.setBounds(6, 76 + GUIUtilities.increaseByHeight(dataIndex,
-						heightDifference), 80, 18);
+		chckbxBedpostx.setBounds(6, 76 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 80, 18);
 		getContentPane().add(chckbxBedpostx);
 		JButton btnNewButton = new JButton("Go");
-		btnNewButton.setBounds(364, 103 + GUIUtilities.increaseByHeight(
-				dataIndex, heightDifference), 45, 27);
+		btnNewButton.setBounds(364, 103 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 45, 27);
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				int preferredNumberOfConcurrentProcess = 1;
 				int numberOfProcessLeft = dataIndex + 1;
 				while (numberOfProcessLeft > 0) {
-					Map<String, String[]> processToWait =
-							new LinkedHashMap<String, String[]>();
-					for (int i = 1; i <= GUIUtilities
-							.getNumberOfConcurrentProcess(numberOfProcessLeft,
-									preferredNumberOfConcurrentProcess); i++) {
-						String inputData =
-								inputs.get(getIndex(numberOfProcessLeft))
-										.getB().getText();
-						executePreprocessing(inputData,
-								getIndex(numberOfProcessLeft), processToWait);
+					Map<String, String[]> processToWait = new LinkedHashMap<String, String[]>();
+					for (int i = 1; i <= GUIUtilities.getNumberOfConcurrentProcess(numberOfProcessLeft, preferredNumberOfConcurrentProcess); i++) {
+						String inputData = inputs.get(getIndex(numberOfProcessLeft)).getB().getText();
+						executePreprocessing(inputData, getIndex(numberOfProcessLeft), processToWait);
 						numberOfProcessLeft--;
 					}
-					for (final Entry<String, String[]> entry : processToWait
-							.entrySet()) {
+					for (final Entry<String, String[]> entry : processToWait.entrySet()) {
 						Thread t = new Thread(new Runnable() {
 							@Override
 							public void run() {
-								ProcessBuilder pb =
-										new ProcessBuilder(entry.getValue());
+								ProcessBuilder pb = new ProcessBuilder(entry.getValue());
 
 								pb.redirectErrorStream(true);
 								Process p = null;
 								try {
 									p = pb.start();
 									p.waitFor();
-									InputStreamReader isr =
-											new InputStreamReader(p
-													.getInputStream());
+									InputStreamReader isr = new InputStreamReader(p.getInputStream());
 									BufferedReader br = new BufferedReader(isr);
 
 									while (br.readLine() != null) {
@@ -160,15 +142,10 @@ public class DiffusionPreprocessingExtension extends JApplet {
 							}
 						});
 						t.start();
-						while (t.isAlive()
-								|| t.getState() != Thread.State.TERMINATED) {
+						while (t.isAlive() || t.getState() != Thread.State.TERMINATED) {
 							String inputData = entry.getKey();
-							String workdir =
-									GUIUtilities.getWorkingDirectory(inputData);
-							List<String> errlist =
-									GUIUtilities.searchFile(workdir,
-											GUIUtilities.getFileName(inputData)
-													+ "_error");
+							String workdir = GUIUtilities.getWorkingDirectory(inputData);
+							List<String> errlist = GUIUtilities.searchFile(workdir, GUIUtilities.getFileName(inputData) + "_error");
 							if (!errlist.isEmpty()) {
 								GUIUtilities.deleteFile(workdir, errlist.get(0));
 								break;
@@ -188,20 +165,16 @@ public class DiffusionPreprocessingExtension extends JApplet {
 				return dataIndex - numberOfProcessLeft + 1;
 			}
 
-			private void executePreprocessing(String inputData,
-					final int index, Map<String, String[]> processToWait) {
+			private void executePreprocessing(String inputData, final int index, Map<String, String[]> processToWait) {
 				if (inputData.trim().isEmpty()) {
 
 					return;
 				}
 
-				if (!GUIUtilities.checkInput(inputData, ".nii.gz")
-						&& !GUIUtilities.checkInput(inputData, "nii")) {
+				if (!GUIUtilities.checkInput(inputData, ".nii.gz") && !GUIUtilities.checkInput(inputData, "nii")) {
 					Thread t = new Thread(new Runnable() {
 						public void run() {
-							JOptionPane.showMessageDialog(null, "Input "
-									+ (index + 1) + ": "
-									+ "this is not an image file!");
+							JOptionPane.showMessageDialog(null, "Input " + (index + 1) + ": " + "this is not an image file!");
 						}
 					});
 					t.start();
@@ -210,19 +183,12 @@ public class DiffusionPreprocessingExtension extends JApplet {
 				}
 
 				try {
-					String workingdir =
-							GUIUtilities.getWorkingDirectory(inputData);
+					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
 					String bvecs = getTextFile(workingdir, "bvecs");
 					String bval = getTextFile(workingdir, "bval");
-					String[] args =
-							{
-									inputData,
-									String.valueOf(chckbxBedpostx.isSelected()),
-									workingdir, bvecs, bval };
+					String[] args = { inputData, String.valueOf(chckbxBedpostx.isSelected()), workingdir, bvecs, bval };
 
-					String script =
-							"'cd ../ScriptsRunByGUI; "
-									+ "./DiffusionPreprocessingScripts.sh ";
+					String script = "'cd ../ScriptsRunByGUI; " + "./DiffusionPreprocessingScripts.sh ";
 					for (int i = 0; i < args.length; i++) {
 						script += args[i];
 						if (i < args.length - 1) {
@@ -231,9 +197,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 							script += ";'";
 						}
 					}
-					String[] cmdArray =
-							{ "gnome-terminal", "--disable-factory", "-e",
-									"bash -c " + script };
+					String[] cmdArray = { "gnome-terminal", "--disable-factory", "-e", "bash -c " + script };
 					processToWait.put(inputData, cmdArray);
 
 				} catch (NoSuchFileException e) {
@@ -242,24 +206,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 					// Create an error pop up
 					Thread t = new Thread(new Runnable() {
 						public void run() {
-							JOptionPane.showMessageDialog(null, "Input "
-									+ (index + 1) + ": " + message
-									+ " not found!");
-						}
-					});
-					t.start();
-
-					return;
-
-				} catch (DoubleOccurrenceException e) {
-
-					final String message = e.getMessage();
-					// Create an error pop up
-					Thread t = new Thread(new Runnable() {
-						public void run() {
-							JOptionPane.showMessageDialog(null, "Input "
-									+ (index + 1) + ": "
-									+ "Multiple occurrence of " + message);
+							JOptionPane.showMessageDialog(null, "Input " + (index + 1) + ": " + message + " not found!");
 						}
 					});
 					t.start();
@@ -269,16 +216,11 @@ public class DiffusionPreprocessingExtension extends JApplet {
 				}
 			}
 
-			private String getTextFile(String workingdir, String filename)
-					throws NoSuchFileException {
+			private String getTextFile(String workingdir, String filename) throws NoSuchFileException {
 
-				List<String> possibleFiles =
-						GUIUtilities.searchFile(workingdir, "*" + filename
-								+ "*");
+				List<String> possibleFiles = GUIUtilities.searchFile(workingdir, "*" + filename + "*");
 				if (possibleFiles.isEmpty()) {
 					throw new NoSuchFileException(filename);
-				} else if (possibleFiles.size() > 1) {
-					throw new DoubleOccurrenceException(filename);
 				} else {
 					return possibleFiles.get(0);
 				}
@@ -288,8 +230,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		getContentPane().add(btnNewButton);
 
 		JButton btnCancel = new JButton("Cancel");
-		btnCancel.setBounds(420, 103 + GUIUtilities.increaseByHeight(dataIndex,
-				heightDifference), 70, 27);
+		btnCancel.setBounds(420, 103 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 70, 27);
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				System.exit(0);
@@ -298,8 +239,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 		getContentPane().add(btnCancel);
 
 		JButton btnHelp = new JButton("Help");
-		btnHelp.setBounds(266, 104 + GUIUtilities.increaseByHeight(dataIndex,
-				heightDifference), 88, 25);
+		btnHelp.setBounds(266, 104 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 88, 25);
 		getContentPane().add(btnHelp);
 
 		JLabel lblNumberOfDatasets = new JLabel("Number of datasets");
@@ -339,8 +279,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 					Integer.parseInt(tf.getText());
 					return true;
 				} catch (NumberFormatException e) {
-					JOptionPane.showMessageDialog(null,
-							"Please type an integer, thanks!");
+					JOptionPane.showMessageDialog(null, "Please type an integer, thanks!");
 					return false;
 				}
 			}
@@ -353,8 +292,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 				String typed = textField_1.getText();
 				try {
 					int x = Integer.parseInt(typed);
-					if (!typed.matches("\\d+") || typed.length() > 3 || x > 10
-							|| x < 1) {
+					if (!typed.matches("\\d+") || typed.length() > 3 || x > 10 || x < 1) {
 						return;
 					}
 					int value = Integer.parseInt(typed);
@@ -369,15 +307,11 @@ public class DiffusionPreprocessingExtension extends JApplet {
 
 		Icon icn = UIManager.getIcon("OptionPane.questionIcon");
 
-		BufferedImage image =
-				new BufferedImage(icn.getIconWidth(), icn.getIconHeight(),
-						BufferedImage.TYPE_INT_ARGB);
+		BufferedImage image = new BufferedImage(icn.getIconWidth(), icn.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
 
 		icn.paintIcon(null, image.getGraphics(), 0, 0);
 
-		ImageIcon icon =
-				new ImageIcon(image.getScaledInstance(23, 23,
-						Image.SCALE_AREA_AVERAGING));
+		ImageIcon icon = new ImageIcon(image.getScaledInstance(23, 23, Image.SCALE_AREA_AVERAGING));
 
 		JButton lblquestion = new JButton(icon);
 		lblquestion.setBounds(420, 8, 22, 22);
@@ -390,8 +324,7 @@ public class DiffusionPreprocessingExtension extends JApplet {
 			public void actionPerformed(ActionEvent e) {
 				dataIndex = Integer.parseInt(textField_1.getText()) - 1;
 
-				f.setBounds(400, 100, 510, 136 + GUIUtilities.increaseByHeight(
-						dataIndex, heightDifference));
+				f.setBounds(400, 100, 510, 136 + GUIUtilities.increaseByHeight(dataIndex, heightDifference));
 
 				applet = new DiffusionPreprocessingExtension(dataIndex);
 
@@ -408,18 +341,13 @@ public class DiffusionPreprocessingExtension extends JApplet {
 	private void initInputDirectory(final int index) {
 		for (int i = 0; i <= index; i++) {
 			final int x = i;
-			inputs.add(new Triple<JLabel, JTextField, JButton>(new JLabel(
-					"Input data " + (i + 1)), new JTextField(), new JButton(
-					"Open")));
-			inputs.get(i).getA()
-					.setBounds(6, 7 + i * heightDifference, 111, 15);
+			inputs.add(new Triple<JLabel, JTextField, JButton>(new JLabel("Input data " + (i + 1)), new JTextField(), new JButton("Open")));
+			inputs.get(i).getA().setBounds(6, 7 + i * heightDifference, 111, 15);
 			panel.add(inputs.get(i).getA());
-			inputs.get(i).getB()
-					.setBounds(100, 1 + i * heightDifference, 308, 27);
+			inputs.get(i).getB().setBounds(100, 1 + i * heightDifference, 308, 27);
 			panel.add(inputs.get(i).getB());
 			inputs.get(i).getB().setColumns(10);
-			inputs.get(i).getC()
-					.setBounds(415, 2 + i * heightDifference, 61, 27);
+			inputs.get(i).getC().setBounds(415, 2 + i * heightDifference, 61, 27);
 			inputs.get(i).getC().addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					buildLoadDiag(x);

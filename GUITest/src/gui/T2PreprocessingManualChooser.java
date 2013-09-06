@@ -173,6 +173,7 @@ public class T2PreprocessingManualChooser extends JApplet {
 				Deque<Pair<String, String[]>> listOfInputsForT2 = new LinkedList<Pair<String, String[]>>();
 				Deque<Pair<String, String[]>> listOfInputsForSegmentation = new LinkedList<Pair<String, String[]>>();
 				List<Thread> listOfObserverThreads = new LinkedList<Thread>();
+				List<Pair<Integer, String>> listOfInvalidInputs = new LinkedList<Pair<Integer, String>>();
 				for (int i = 0; i <= dataIndex; i++) {
 					Triple<JTextField, JTextField, JSlider> triple = textFields.get(i);
 					String inputData = triple.getA().getText();
@@ -182,30 +183,19 @@ public class T2PreprocessingManualChooser extends JApplet {
 
 						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
 
+						String subjfolder = GUIUtilities.getFileName(workingdir);
+
 						if (!GUIUtilities.isInputForT2Valid(inputData)) {
-							final int x = i;
-							final String input = inputData;
-							final String directory = workingdir;
-							Thread t = new Thread(new Runnable() {
-
-								@Override
-								public void run() {
-									JOptionPane.showMessageDialog(null,
-											"The file name of input image " + (x + 1) + " : " + "\"" + GUIUtilities.getFileName(input)
-													+ "\" has been renamed to \"" + GUIUtilities.getFileName(directory) + "_T2.nii.gz\".");
-								}
-
-							});
-							t.start();
+							listOfInvalidInputs.add(new Pair<Integer, String>(i, inputData));
 						}
 
-						String[] args = { inputData, age, workingdir, GUIUtilities.getFileName(workingdir) };
+						String[] args = { inputData, age, workingdir, subjfolder };
 
 						GUIUtilities.populateInputs(listOfInputsForT2, inputData, args, "./T2PreprocessingScripts.sh ");
 
 						if (chckbxParcellationAndSegmentation.isSelected()) {
 
-							String[] args2 = { GUIUtilities.getFileName(inputData), age, workingdir };
+							String[] args2 = { subjfolder, age, workingdir, inputData };
 
 							GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args2, "./segmentation.sh ");
 
@@ -265,6 +255,23 @@ public class T2PreprocessingManualChooser extends JApplet {
 					}
 				}
 
+				for (Pair<Integer, String> pair : listOfInvalidInputs) {
+					final int x = pair.getA();
+					final String input = pair.getB();
+					final String directory = GUIUtilities.getWorkingDirectory(input);
+					Thread t = new Thread(new Runnable() {
+
+						@Override
+						public void run() {
+							JOptionPane.showMessageDialog(null,
+									"The file name of input image " + (x + 1) + " : " + "\"" + GUIUtilities.getFileName(input)
+											+ "\" has been renamed to \"" + GUIUtilities.getFileName(directory) + "_T2.nii.gz\".");
+						}
+
+					});
+					t.start();
+				}
+
 			}
 
 			private <T> boolean isObserversDead(List<T> list) {
@@ -314,7 +321,8 @@ public class T2PreprocessingManualChooser extends JApplet {
 					age = GUIUtilities.checkAge(age);
 					if (GUIUtilities.isInputValid(i, inputData)) {
 						String workingdir = GUIUtilities.getWorkingDirectory(inputData);
-						String[] args = { GUIUtilities.getFileName(inputData), age, workingdir };
+						String subjfold = GUIUtilities.getFileName(workingdir);
+						String[] args = { subjfold, age, workingdir, inputData };
 						GUIUtilities.populateInputs(listOfInputsForSegmentation, inputData, args, "./segmentation.sh ");
 					}
 				}

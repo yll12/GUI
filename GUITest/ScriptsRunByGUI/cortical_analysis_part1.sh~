@@ -139,13 +139,16 @@ checkForError
 
 if $7; then
 
-./cog ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  ${scan}/${subj}_T2_to_B0.dof    
-./rreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
-./areg  ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
-./nreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof -parin ./nreg_neonate.cnf
+	if [ ! -f ${scan}/${subj}_final_template_to_B0.dof ] ; then
+		./cog ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  ${scan}/${subj}_T2_to_B0.dof    
+		./rreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
+		./areg  ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
+		./nreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof -parin ./nreg_neonate.cnf
 
-./ffdcomposeN ${scan}/${subj}_B0_to_T2.dof -dofin_i ${scan}/${subj}_T2_to_B0.dof
-./ffdcomposeN ${scan}/${subj}_final_template_to_B0.dof -dofin ${scan}/${subj}_T2_to_B0.dof -dofin ${scan}/${subj}_final_template_to_T2.dof
+		./ffdcomposeN ${scan}/${subj}_B0_to_T2.dof -dofin_i ${scan}/${subj}_T2_to_B0.dof
+		./ffdcomposeN ${scan}/${subj}_final_template_to_B0.dof -dofin ${scan}/${subj}_T2_to_B0.dof -dofin ${scan}/${subj}_final_template_to_T2.dof
+
+	fi
 
 ./transformation $6 ${dir_path}/cortical_analysis/maps/${subj}_data_transformed.nii.gz -dofin ${scan}/${subj}_final_template_to_B0.dof -target ./templates/template-${temp_age}.nii.gz -invert
 

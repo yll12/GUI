@@ -42,7 +42,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import sun.java2d.xr.MutableInteger;
-import utils.DoubleOccurrenceException;
 import utils.GUIUtilities;
 import utils.NoSuchFileException;
 import utils.Pair;
@@ -63,7 +62,8 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 	private JTextField textField_numberOfConcurrentProcess;
 	private final String questionToolTip = "Specify the total number of data(Click for more details)";
 	private final String dataToolTip = "Specify the total number of data";
-	private final String inputToolTip = "Specify the full path to the image file";
+	private final String inputToolTip = "Specify the full path to the image file. Check data - ensure number of volumes are equal to number of "
+			+ "bvec or bval entries, i.e: no trace image.";
 	private final String clearToolTip = "Clear all inputs";
 	private final String openToolTip = "Open File";
 	private final String go1ToolTip = "Click to set the total number of data to the specified number";
@@ -114,12 +114,12 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 		chckbxBedpostx.setBounds(6, 76 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 80, 18);
 		chckbxBedpostx.setToolTipText(bedpostxToolTip);
 		getContentPane().add(chckbxBedpostx);
-		
+
 		chckbxEddyCorrect = new JCheckBox("Eddy_correct");
 		chckbxEddyCorrect.setBounds(6, 106 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 150, 18);
 		chckbxEddyCorrect.setToolTipText(eddyCorrectToolTip);
 		getContentPane().add(chckbxEddyCorrect);
-		
+
 		JLabel lblNumberOfConcurrentProcess = new JLabel("Number of Concurrent Process");
 		lblNumberOfConcurrentProcess.setBounds(8, 130 + GUIUtilities.increaseByHeight(dataIndex, heightDifference), 200, 25);
 		lblNumberOfConcurrentProcess.setToolTipText(processToolTip);
@@ -203,7 +203,7 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 					return;
 				}
 
-				if (!GUIUtilities.checkInput(inputData, ".nii.gz") && !GUIUtilities.checkInput(inputData, "nii")) {
+				if (!GUIUtilities.checkInput(inputData, ".nii.gz") && !GUIUtilities.checkInput(inputData, ".nii")) {
 					Thread t = new Thread(new Runnable() {
 						public void run() {
 							JOptionPane.showMessageDialog(null, "Input " + (index + 1) + ": " + "this is not an image file!");
@@ -216,8 +216,8 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 
 				try {
 					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
-					String bvecs = getTextFile(workingdir, "bvec");
-					String bval = getTextFile(workingdir, "bval");
+					String bvecs = getTextFile(workingdir, "bvec", index);
+					String bval = getTextFile(workingdir, "bval", index);
 					String[] args =
 							{ inputData, String.valueOf(chckbxBedpostx.isSelected()), workingdir, bvecs, bval,
 									String.valueOf(chckbxEddyCorrect.isSelected()) };
@@ -246,29 +246,17 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 
 					return;
 
-				} catch (DoubleOccurrenceException e) {
-
-					final String message = e.getMessage();
-					// Create an error pop up
-					Thread t = new Thread(new Runnable() {
-						public void run() {
-							JOptionPane.showMessageDialog(null, "Input " + (index + 1) + ": " + "Multiple occurrence of " + message);
-						}
-					});
-					t.start();
-
-					return;
-
 				}
+
 			}
 
-			private String getTextFile(String workingdir, String filename) throws NoSuchFileException {
+			private String getTextFile(String workingdir, String filename, int index) throws NoSuchFileException {
 
 				List<String> possibleFiles = GUIUtilities.searchFileWithoutFullPath(workingdir, "*" + filename + "*");
 				if (possibleFiles.isEmpty()) {
 					throw new NoSuchFileException(filename);
 				} else if (possibleFiles.size() > 1) {
-					throw new DoubleOccurrenceException(filename);
+					return GUIUtilities.askUserForText(possibleFiles, index, filename);
 				} else {
 					return possibleFiles.get(0);
 				}
@@ -339,8 +327,8 @@ public class DiffusionPreprocessingManualChooser extends JApplet {
 						GUIUtilities.createLine(lineNumber, content, c, " ");
 						GUIUtilities.createLine(lineNumber, content, c, "Go : Starts the Diffusion preprocessing");
 						GUIUtilities.createLine(lineNumber, content, c, " ");
-						GUIUtilities.createLine(lineNumber, content, c, "  **Note : Implicitly, \"*bvecs\" and \"*bvals\" will be searched"
-								+ " in the same directory as the input image files, so there must one and only be one instance of both files.");
+						GUIUtilities.createLine(lineNumber, content, c, "**NOTE: Check data - ensure number of volumes are equal to number of "
+								+ "bvec or bval entries, i.e: no trace image.");
 					}
 				};
 				applet.init();

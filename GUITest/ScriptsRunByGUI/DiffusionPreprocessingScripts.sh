@@ -17,7 +17,9 @@ fi
 NoError=true
 cd ../PreprocessingScripts
 
-cp $3/$4 $3/bvecs_original
+if [ ! $4 == bvecs_original ]; then
+	cp $3/$4 $3/bvecs_original
+fi
 
 if $6; 
 then

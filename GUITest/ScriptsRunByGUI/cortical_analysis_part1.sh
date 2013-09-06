@@ -129,7 +129,7 @@ fi
 ./ffdcomposeN ${scan}/${subj}_final_template_to_T2.dof -dofin ${scan}/${subj}_template_to_T2.dof `echo $dofs`
 checkForError
 
-fsl5.0-fslmaths ${scan}/segmentations/${subj}_T2_tissue_labels -thr 2 -uthr 2 -bin ${scan}/segmentations/${subj}_cortex
+fsl5.0-fslmaths ${scan}/segmentations/${subj}_tissue_labels -thr 2 -uthr 2 -bin ${scan}/segmentations/${subj}_cortex
 ./transformation ${scan}/segmentations/${subj}_cortex.nii.gz ${dir_path}/cortical_analysis/maps/tmp_${subj}_cortex_map.nii.gz -dofin ${scan}/${subj}_final_template_to_T2.dof -target ./templates/template-${temp_age}.nii.gz -invert 
 fsl5.0-fslmaths ${dir_path}/cortical_analysis/maps/tmp_${subj}_cortex_map.nii.gz -s 1 ${dir_path}/cortical_analysis/maps/${subj}_cortex_map.nii.gz -odt float
 checkForError
@@ -140,10 +140,10 @@ checkForError
 if $7; then
 
 	if [ ! -f ${scan}/${subj}_final_template_to_B0.dof ] ; then
-		./cog ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  ${scan}/${subj}_T2_to_B0.dof    
-		./rreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz  -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
-		./areg  ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
-		./nreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_T2_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof -parin ./nreg_neonate.cnf
+		./cog ${scan}/nodif_brain.nii.gz ${scan}/${subj}_brain.nii.gz  ${scan}/${subj}_T2_to_B0.dof    
+		./rreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_brain.nii.gz  -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
+		./areg  ${scan}/nodif_brain.nii.gz ${scan}/${subj}_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof
+		./nreg ${scan}/nodif_brain.nii.gz ${scan}/${subj}_brain.nii.gz -dofin ${scan}/${subj}_T2_to_B0.dof -dofout ${scan}/${subj}_T2_to_B0.dof -parin ./nreg_neonate.cnf
 
 		./ffdcomposeN ${scan}/${subj}_B0_to_T2.dof -dofin_i ${scan}/${subj}_T2_to_B0.dof
 		./ffdcomposeN ${scan}/${subj}_final_template_to_B0.dof -dofin ${scan}/${subj}_T2_to_B0.dof -dofin ${scan}/${subj}_final_template_to_T2.dof

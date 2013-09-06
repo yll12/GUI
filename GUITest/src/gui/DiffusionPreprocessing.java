@@ -19,7 +19,6 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
-import utils.DoubleOccurrenceException;
 import utils.GUIUtilities;
 import utils.NoSuchFileException;
 
@@ -33,8 +32,7 @@ public class DiffusionPreprocessing extends JApplet {
 	 */
 	public DiffusionPreprocessing() {
 
-		for (UIManager.LookAndFeelInfo info : UIManager
-				.getInstalledLookAndFeels()) {
+		for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 			if ("Nimbus".equals(info.getName())) {
 				try {
 					UIManager.setLookAndFeel(info.getClassName());
@@ -85,23 +83,18 @@ public class DiffusionPreprocessing extends JApplet {
 
 				if (!GUIUtilities.checkInput(inputData, ".nii.gz")) {
 
-					JOptionPane.showMessageDialog(errors,
-							"This is not an image file!");
+					JOptionPane.showMessageDialog(errors, "This is not an image file!");
 					return;
 				}
 
 				try {
 
-					String workingdir = GUIUtilities
-							.getWorkingDirectory(inputData);
+					String workingdir = GUIUtilities.getWorkingDirectory(inputData);
 					String bvecs = getTextFile(workingdir, "bvecs");
 					String bval = getTextFile(workingdir, "bval");
-					String[] args = { inputData,
-							String.valueOf(chckbxBedpostx.isSelected()),
-							workingdir, bvecs, bval };
+					String[] args = { inputData, String.valueOf(chckbxBedpostx.isSelected()), workingdir, bvecs, bval };
 
-					String script = "'cd ../ScriptsRunByGUI; "
-							+ "./DiffusionPreprocessingScripts.sh ";
+					String script = "'cd ../ScriptsRunByGUI; " + "./DiffusionPreprocessingScripts.sh ";
 					for (int i = 0; i < args.length; i++) {
 						script += args[i];
 						if (i < args.length - 1) {
@@ -110,36 +103,24 @@ public class DiffusionPreprocessing extends JApplet {
 							script += "; read'";
 						}
 					}
-					String[] cmdArray = { "gnome-terminal", "-e",
-							"bash -c " + script };
+					String[] cmdArray = { "gnome-terminal", "-e", "bash -c " + script };
 
 					Runtime.getRuntime().exec(cmdArray);
 				} catch (NoSuchFileException e) {
 
 					// Create an error pop up
-					JOptionPane.showMessageDialog(errors, e.getMessage()
-							+ " not found!");
-
-				} catch (DoubleOccurrenceException e) {
-
-					// Create an error pop up
-					JOptionPane.showMessageDialog(errors,
-							"Multiple occurrence of " + e.getMessage());
+					JOptionPane.showMessageDialog(errors, e.getMessage() + " not found!");
 
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 
-			private String getTextFile(String workingdir, String filename)
-					throws NoSuchFileException {
+			private String getTextFile(String workingdir, String filename) throws NoSuchFileException {
 
-				List<String> possibleFiles = GUIUtilities.searchFile(
-						workingdir, "*" + filename + "*");
+				List<String> possibleFiles = GUIUtilities.searchFile(workingdir, "*" + filename + "*");
 				if (possibleFiles.isEmpty()) {
 					throw new NoSuchFileException(filename);
-				} else if (possibleFiles.size() > 1) {
-					throw new DoubleOccurrenceException(filename);
 				} else {
 					return possibleFiles.get(0);
 				}

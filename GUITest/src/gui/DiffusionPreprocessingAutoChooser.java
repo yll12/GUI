@@ -36,7 +36,9 @@ public class DiffusionPreprocessingAutoChooser extends JApplet {
 	private final int heightDifference = 30;
 	private List<String> texts = new LinkedList<String>();
 	private List<JTextField> textfields = new LinkedList<JTextField>();
-	private final String inputToolTip = "Specify the parent directory that contains all the image files";
+	private final String inputToolTip =
+			"Specify the parent directory that contains all the image files. Check data - ensure number of volumes are equal to number of "
+					+ "bvec or bval entries, i.e: no trace image.";
 	private final String openToolTip = "Open File";
 	private final String nextToolTip = "Search for all image files that matches the file name to search and populates it in manual view";
 	private final String helpToolTip = "Help";
@@ -245,6 +247,9 @@ public class DiffusionPreprocessingAutoChooser extends JApplet {
 						GUIUtilities.createLine(lineNumber, content, c,
 								"Next : Proceed to the manual view, which populates all the input image files "
 										+ "and age at scan for a final check before processing.");
+						GUIUtilities.createLine(lineNumber, content, c, " ");
+						GUIUtilities.createLine(lineNumber, content, c, "**NOTE: Check data - ensure number of volumes are equal to number of "
+								+ "bvec or bval entries, i.e: no trace image.");
 					}
 				};
 				applet.init();
